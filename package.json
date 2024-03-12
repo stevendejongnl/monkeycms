@@ -1,0 +1,43 @@
+{
+  "name": "monkeycms",
+  "version": "0.0.0",
+  "type": "module",
+  "description": "Monkey CMS is a simple, configurable API-based content management system (CMS), deriving its name from the Dutch pronunciation of 'API' as 'aapie'.",
+  "main": "index.js",
+  "scripts": {
+    "clean": "rimraf -g ./dist/ ./tsconfig.tsbuildinfo",
+    "prebuild": "npm run clean",
+    "build": "concurrently 'npm run build:js' 'npm run build:css' ",
+    "build:js": "tspc -b",
+    "build:css": "sass --no-source-map src/main.scss dist/main.css",
+    "watch": "concurrently --raw 'npm run build:js -- --watch' 'npm run build:css -- --watch'",
+    "pretest": "npm run build",
+    "test": "web-test-runner",
+    "test:watch": "web-test-runner --watch",
+    "lint": "concurrently 'npm run eslint' 'npm run stylelint'",
+    "lint:fix": "concurrently 'npm run eslint:fix' 'npm run stylelint:fix'",
+    "eslint": "eslint 'src/**/*.ts'",
+    "eslint:fix": "eslint 'src/**/*.ts' --fix",
+    "stylelint": "stylelint 'src/**/*.{ts,css,scss}'",
+    "stylelint:fix": "stylelint 'src/**/*.{ts,css,scss}' --fix"
+  },
+  "keywords": [],
+  "author": "Steven de Jong <steven@steven-dejong.nl>",
+  "license": "MIT",
+  "devDependencies": {
+    "@open-wc/testing": "^3.2.2",
+    "@preact/signals-core": "^1.5.1",
+    "@types/mocha": "^10.0.6",
+    "@web/test-runner": "^0.18.1",
+    "@web/test-runner-junit-reporter": "^0.7.1",
+    "@web/test-runner-playwright": "^0.11.0",
+    "concurrently": "^8.2.2",
+    "eslint": "^8.57.0",
+    "lit": "^3.1.2",
+    "rimraf": "^5.0.5",
+    "sass": "^1.71.1",
+    "ts-patch": "^3.1.2",
+    "typescript": "^5.4.2",
+    "typescript-transform-paths": "^3.4.7"
+  }
+}
