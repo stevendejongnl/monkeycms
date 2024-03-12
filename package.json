@@ -1,6 +1,6 @@
 {
   "name": "monkeycms",
-  "version": "0.0.0",
+  "version": "0.0.1",
   "type": "module",
   "description": "Monkey CMS is a simple, configurable API-based content management system (CMS), deriving its name from the Dutch pronunciation of 'API' as 'aapie'.",
   "main": "index.js",
