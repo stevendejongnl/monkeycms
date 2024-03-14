@@ -11,7 +11,7 @@ const FakeFetch = (endpoint: string, fakeResponse: any): Promise<Response> => {
     })
 }
 
-export const SET_UP_STORE = Symbol('SET_UP_STORE').toString()
+export const SET_UP_STORE = 'SET_UP_STORE'
 
 @customElement('monkey-set-up')
 export class MonkeySetUp extends LitElement {

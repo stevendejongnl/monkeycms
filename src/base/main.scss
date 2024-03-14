@@ -1,1 +1,12 @@
+// color scheme based on embark: https://embark-theme.github.io/
 
+// Colors
+:root {
+    --background-color: #100E23;
+    --color: #585273;
+}
+
+body {
+    background-color: var(--background-color);
+    color: var(--color);
+}
