@@ -5,9 +5,10 @@
   "description": "Monkey CMS is a simple, configurable API-based content management system (CMS), deriving its name from the Dutch pronunciation of 'API' as 'aapie'.",
   "main": "index.js",
   "bin": {
-    "monkeycms": "./dist/utilities/cli/cli.js"
+    "monkeycms": "./bin/dist/cli.js"
   },
   "scripts": {
+    "postinstall": "cd bin && tsc -b && chmod +x ./dist/cli.js && cd ../ && npm link",
     "clean": "rimraf -g ./dist/ ./tsconfig.tsbuildinfo",
     "prebuild": "npm run clean",
     "build": "concurrently 'npm run build:js' 'npm run build:css' ",
@@ -51,6 +52,7 @@
     "rollup": "^4.13.0",
     "rollup-plugin-visualizer": "^5.12.0",
     "sass": "^1.71.1",
+    "ts-node": "^10.9.2",
     "ts-patch": "^3.1.2",
     "typescript": "^5.4.2",
     "typescript-transform-paths": "^3.4.7"

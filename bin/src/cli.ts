@@ -1,8 +1,9 @@
-#! /usr/bin/env node
+#!/usr/bin/env node
 
 import chalk from 'chalk'
 import { helper } from './helper.js'
 import { serve } from './commands/serve.js'
+import { build } from './commands/build.js'
 
 const command = helper.input[0]
 
@@ -17,7 +18,7 @@ switch (command) {
     break
   case 'build':
   case 'b':
-    console.log(chalk.green('Building project...'))
+    build()
     break
   case 'test':
   case 't':

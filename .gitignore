@@ -129,3 +129,4 @@ dist
 .yarn/install-state.gz
 .pnp.*
 junit-test-results.xml
+.idea
