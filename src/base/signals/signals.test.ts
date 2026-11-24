@@ -1,44 +1,46 @@
-import { expect } from '@open-wc/testing'
-import { createSignal, createLocalStorageSignal } from './signals.js'
+import assert from 'node:assert/strict'
+import { beforeEach, describe, it } from 'node:test'
+import { createSignal, createLocalStorageSignal } from './signals.ts'
 
+
+const memory = new Map<string, string>()
+
+Object.defineProperty(globalThis, 'localStorage', {
+    configurable: true,
+    value: {
+        getItem: (key: string) => memory.get(key) ?? null,
+        setItem: (key: string, value: string) => void memory.set(key, String(value)),
+    },
+})
 
 describe('Signals', () => {
-    it('should store and get signal', async () => {
+    beforeEach(() => memory.clear())
+
+    it('should store and get signal', () => {
         const [signal, setSignal] = createSignal('the initial value')
 
         setSignal('the updated value')
 
-        const actual = signal()
-        const expected = 'the updated value'
-
-        await expect(actual).to.equal(expected)
+        assert.equal(signal(), 'the updated value')
     })
 
-    it('should store and get signal from local storage', async () => {
-        const SIGNAL_KEY = Symbol('SIGNAL_KEY').toString()
+    it('should store and get signal from local storage', () => {
+        const SIGNAL_KEY = 'SIGNAL_KEY'
         const [signal, setSignal] = createLocalStorageSignal(SIGNAL_KEY, 'the initial value')
 
         setSignal('the updated value')
 
-        const actualSignal = signal()
-        const actualLocalStorage = localStorage.getItem(SIGNAL_KEY) || ''
-        const expected = 'the updated value'
-
-        await expect(actualSignal).to.equal(expected)
-        await expect(JSON.parse(actualLocalStorage)).to.equal(expected)
+        assert.equal(signal(), 'the updated value')
+        assert.equal(JSON.parse(localStorage.getItem(SIGNAL_KEY) ?? ''), 'the updated value')
     })
 
-    it('should store complex object in local storage', async () => {
-        const SIGNAL_KEY = Symbol('COMPLEX_SIGNAL_KEY').toString()
+    it('should store complex object in local storage', () => {
+        const SIGNAL_KEY = 'COMPLEX_SIGNAL_KEY'
         const [signal, setSignal] = createLocalStorageSignal(SIGNAL_KEY, { value: 'the initial value' })
 
         setSignal({ value: 'the updated value' })
 
-        const actualSignal = signal()
-        const actualLocalStorage = localStorage.getItem(SIGNAL_KEY) || ''
-        const expected = { value: 'the updated value' }
-
-        await expect(actualSignal).to.deep.equal(expected)
-        await expect(JSON.parse(actualLocalStorage)).to.deep.equal(expected)
+        assert.deepEqual(signal(), { value: 'the updated value' })
+        assert.deepEqual(JSON.parse(localStorage.getItem(SIGNAL_KEY) ?? ''), { value: 'the updated value' })
     })
 })
