@@ -4,24 +4,44 @@ import { MappingError } from './mapping-error.ts'
 
 const PLACEHOLDER = /\{([^{}]+)\}/g
 
+const isText = (value: unknown): value is string | number | boolean =>
+    ['string', 'number', 'boolean'].includes(typeof value)
+
+const fail = (message: string): never => {
+    throw new MappingError(message)
+}
+
+const textOf = (value: unknown, name: string, template: string): string =>
+    value === undefined || value === null
+        ? fail(`Missing variable "${name}" in template "${template}"`)
+        : isText(value)
+            ? String(value)
+            : fail(`Variable "${name}" in template "${template}" is not a string, number or boolean`)
+
 // Replaces {name} and {nested.name} with values from vars. A missing variable is an error,
 // and so is a value that is not a string, number or boolean.
 export const interpolate = (template: string, vars: Record<string, unknown>, encode = false): string =>
-    template.replace(PLACEHOLDER, (_match, name: string) => {
-        const value = getPath(vars, name.trim())
+    template.replace(PLACEHOLDER, (_match, rawName: string) => {
+        const name = rawName.trim()
+        const text = textOf(getPath(vars, name), name, template)
 
-        if (value === undefined || value === null) {
-            throw new MappingError(`Missing variable "${name.trim()}" in template "${template}"`)
-        }
-
-        if (typeof value !== 'string' && typeof value !== 'number' && typeof value !== 'boolean') {
-            throw new MappingError(`Variable "${name.trim()}" in template "${template}" is not a string, number or boolean`)
-        }
-
-        return encode ? encodeURIComponent(String(value)) : String(value)
+        return encode ? encodeURIComponent(text) : text
     })
 
-const sameOrigin = (a: string, b: string): boolean => new URL(a).origin === new URL(b).origin
+const originOf = (url: string): string => new URL(url).origin
+
+const sameOrigin = (a: string, b: string): boolean => originOf(a) === originOf(b)
+
+export const isUnderBaseUrl = (url: string, baseUrl: string): boolean => {
+    try {
+        return sameOrigin(url, baseUrl)
+    } catch {
+        return false
+    }
+}
+
+const queryOf = (templates: Record<string, string>, vars: Record<string, unknown>): Record<string, string> =>
+    Object.fromEntries(Object.entries(templates).map(([key, template]) => [key, interpolate(template, vars)]))
 
 // Builds the full URL. The path is always placed under baseUrl, and variables in the path
 // are URL-encoded, so a value cannot change the host or add path segments.
@@ -35,25 +55,7 @@ export const buildUrl = (
     const path = interpolate(pathTemplate.replace(/^\/+/, ''), vars, true)
     const url = new URL(`${baseUrl.replace(/\/+$/, '')}/${path}`)
 
-    if (!sameOrigin(url.href, baseUrl)) {
-        throw new MappingError(`URL "${url.href}" is not under the base URL "${baseUrl}"`)
-    }
-
-    for (const [key, template] of Object.entries(queryTemplates)) {
-        url.searchParams.set(key, interpolate(template, vars))
-    }
-
-    for (const [key, value] of Object.entries(extraQuery)) {
-        url.searchParams.set(key, value)
-    }
-
-    return url.href
-}
-
-export const isUnderBaseUrl = (url: string, baseUrl: string): boolean => {
-    try {
-        return sameOrigin(url, baseUrl)
-    } catch {
-        return false
-    }
+    return isUnderBaseUrl(url.href, baseUrl)
+        ? Object.assign(url, { search: new URLSearchParams({ ...queryOf(queryTemplates, vars), ...extraQuery }).toString() }).href
+        : fail(`URL "${url.href}" is not under the base URL "${baseUrl}"`)
 }
