@@ -14,7 +14,7 @@ The same MonkeyCMS build can work with many different APIs. Only the config chan
 
 - **Data-only config.** The config is JSON. It contains no code, and MonkeyCMS never runs `eval` or `Function` on it. A config from an untrusted source cannot run code.
 - **One internal model.** The UI knows only collections, entries and fields. All API details (URLs, body shapes, pagination, auth) live in the mapping.
-- **Few dependencies.** Prefer the platform and Node built-ins. Every dependency must have a reason. All dependencies stay on the latest version.
+- **Few dependencies.** Prefer the platform and Node built-ins. Every dependency must have a reason. All dependencies stay on the latest version. See [DEPENDENCIES.md](DEPENDENCIES.md).
 - **License.** AGPL-3.0-only.
 
 ## Architecture
