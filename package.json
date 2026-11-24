@@ -30,7 +30,7 @@
   },
   "keywords": [],
   "author": "Steven de Jong <steven@steven-dejong.nl>",
-  "license": "MIT",
+  "license": "AGPL-3.0-only",
   "devDependencies": {
     "@open-wc/testing": "^3.2.2",
     "@preact/signals-core": "^1.5.1",
