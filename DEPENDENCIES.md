@@ -11,26 +11,31 @@ MonkeyCMS uses as few dependencies as possible, and keeps all of them on the lat
 5. **Native CSS.** Use CSS nesting, custom properties and grid. Do not use Sass.
 6. **Keep it checked.** A scheduled CI job runs `npm outdated` and `npm audit`, and fails when a package is behind or has a known vulnerability (tracked in MONKY-5).
 
-## Target set
+## Current set
 
 ### Runtime
 
 | Package | Reason |
 |---------|--------|
 | `lit` | Small and stable. It gives templating and reactive properties, so we do not write and test our own rendering code. |
+| `@preact/signals-core` | Temporary. MONKY-9 replaces it with a small signal module in this repository. |
 
-This is the only runtime dependency. The decision to keep Lit is provisional. To remove it, replace it with plain custom elements and a small base class in this repository.
+The decision to keep Lit is provisional. To remove it, replace it with plain custom elements and a small base class in this repository.
 
 ### Development
 
 | Package | Reason |
 |---------|--------|
-| `typescript` | Type checking and compilation. |
-| `@playwright/test` | Component and end-to-end tests in a real browser. |
-| `eslint` and `typescript-eslint` | Linting. |
-| `esbuild` (only if needed) | A single bundle. Skip it if plain `tsc` output is enough. |
+| `typescript` | Type checking, and compiling the CLI. |
+| `esbuild` | Bundles the browser code and CSS into `dist/`. Plain `tsc` output cannot load `lit` in a browser without an import map. |
+| `@playwright/test` | Component tests in Chromium, Firefox and WebKit. |
+| `@types/node` | Types for the CLI, the build scripts and the unit tests. |
 
 Logic tests use `node:test`. No other package is needed for tests.
+
+### Linting
+
+There is no ESLint. `typescript-eslint` does not support TypeScript 7 yet (its peer range is `typescript <6.1.0`), and TypeScript 7 is the latest version. For now the strict compiler flags in `tsconfig.json` are the lint step (`npm run typecheck`). Add ESLint back when `typescript-eslint` supports TypeScript 7.
 
 ### Replaced by built-ins
 
@@ -39,9 +44,9 @@ Logic tests use `node:test`. No other package is needed for tests.
 | `meow` | `node:util` `parseArgs` |
 | `chalk` | `node:util` `styleText` |
 | `rimraf` | `node:fs` `rm` |
-| `http-server` | a small static server on `node:http` |
-| `@preact/signals-core` | a small signal module in this repository |
+| `http-server` | `scripts/static-server.mjs`, a small static server on `node:http` |
 | `sass` | native CSS |
 | `concurrently` | not needed |
+| rollup and its plugins, `ts-patch`, `ts-node`, `typescript-transform-paths`, `@web/test-runner` and its plugins, `@open-wc/testing`, `stylelint` | `esbuild`, `tsc`, `node:test` and `@playwright/test` |
 
-The packages in the left column are still in `package.json`. MONKY-4 removes them.
+Node 26 (the current LTS) is the minimum version, set in `engines`.

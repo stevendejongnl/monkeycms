@@ -1,6 +1,6 @@
 import { LitElement, html } from 'lit'
 import { customElement, property, state } from 'lit/decorators.js'
-import { createLocalStorageSignal } from '../main.js'
+import { createLocalStorageSignal } from '../main.ts'
 
 
 const FakeFetch = (endpoint: string, fakeResponse: any): Promise<Response> => {

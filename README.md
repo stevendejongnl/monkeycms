@@ -67,4 +67,14 @@ The plan is tracked in the MonkeyCMS project in Plane, in three phases: foundati
 
 ## Development
 
-The build, test and CLI setup is being reworked. Until that is done, see `package.json`.
+You need Node 26 or newer.
+
+```
+npm install
+npm run build        # bundles src/ into dist/ and compiles the CLI in bin/
+npm run typecheck    # strict TypeScript check
+npm test             # typecheck, build, unit tests (node:test), component tests (Playwright)
+npm run serve        # build, then serve http://127.0.0.1:8080/public/index.html
+```
+
+Run the component tests for one browser with `npx playwright test --project=chromium`. Install the browsers first with `npx playwright install`.

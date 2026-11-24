@@ -1,3 +1,3 @@
-export { createSignal, createLocalStorageSignal } from './signals/signals.js'
+export { createSignal, createLocalStorageSignal } from './signals/signals.ts'
 
-export { MonkeySetUp } from './set-up/set-up.js'
+export { MonkeySetUp } from './set-up/set-up.ts'

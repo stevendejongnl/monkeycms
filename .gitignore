@@ -130,3 +130,7 @@ dist
 .pnp.*
 junit-test-results.xml
 .idea
+
+# Playwright
+test-results/
+playwright-report/

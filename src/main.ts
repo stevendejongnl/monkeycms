@@ -1,1 +1,1 @@
-export * from './base/main.js'
+export * from './base/main.ts'
