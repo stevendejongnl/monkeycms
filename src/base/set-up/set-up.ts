@@ -1,40 +1,67 @@
 import { LitElement, html } from 'lit'
 import { customElement, property, state } from 'lit/decorators.js'
-import { createLocalStorageSignal } from '../main.ts'
+import { describeFailure, loadConfig, setConfig } from '../../config/main.ts'
+import type { LoadFailure, MonkeyConfig } from '../../config/main.ts'
 
 
-const FakeFetch = (endpoint: string, fakeResponse: any): Promise<Response> => {
-    console.log(`FakeFetch: ${endpoint}`)
+export const CONFIG_READY = 'monkey-config-ready'
 
-    return new Promise((resolve) => {
-        resolve(new Response(JSON.stringify(fakeResponse)))
-    })
-}
+type Status = 'loading' | 'ready' | 'failed'
 
-export const SET_UP_STORE = 'SET_UP_STORE'
-
+// Loads the mapping config, checks it and puts it in the config store for the other
+// components. Shows when it is loading, and which part of the config is wrong when it fails.
+// Sends "monkey-config-ready" with the config as detail when the config is ready.
 @customElement('monkey-set-up')
 export class MonkeySetUp extends LitElement {
-    @property({ type: String, attribute: 'get-set-up-endpoint'})
-    private setUpEndpoint: string = ''
+    // A URL that returns the config as JSON.
+    @property({ type: String, attribute: 'get-set-up-endpoint' })
+    setUpEndpoint = ''
+
+    // The config as a JSON string. Wins over the endpoint.
+    @property({ type: String, attribute: 'config' })
+    inlineConfig = ''
 
     @state()
-    store: unknown
+    private status: Status = 'loading'
 
-    constructor() {
-        super()
-        this.store
+    @state()
+    private failure: LoadFailure | undefined
+
+    @state()
+    private config: MonkeyConfig | undefined
+
+    override connectedCallback(): void {
+        super.connectedCallback()
+        void this.load()
     }
 
-    override async  connectedCallback(): Promise<void> {
-        super.connectedCallback()
+    private async load(): Promise<void> {
+        this.status = 'loading'
 
-        const response = await FakeFetch(this.setUpEndpoint, { 'some-key': 'some-value' })
-        const [getSetUpStore, ] = createLocalStorageSignal(SET_UP_STORE, await response.json())
-        this.store = getSetUpStore()
+        const result = await loadConfig({ endpoint: this.setUpEndpoint, inline: this.inlineConfig })
+
+        if (result.ok) {
+            setConfig(result.config)
+            this.config = result.config
+            this.failure = undefined
+            this.dispatchEvent(new CustomEvent(CONFIG_READY, { bubbles: true, composed: true, detail: result.config }))
+        } else {
+            this.failure = result.failure
+        }
+
+        this.status = result.ok ? 'ready' : 'failed'
+    }
+
+    private readonly views: Record<Status, () => unknown> = {
+        loading: () => html`<p role="status">Loading the config…</p>`,
+        ready: () => html`<p role="status">Config loaded: ${Object.keys(this.config?.collections ?? {}).join(', ')}</p>`,
+        failed: () => html`
+            <ul role="alert">
+                ${(this.failure === undefined ? [] : describeFailure(this.failure)).map((line) => html`<li>${line}</li>`)}
+            </ul>`,
     }
 
     protected override render(): unknown {
-        return html`yes`
+        return this.views[this.status]()
     }
 }
