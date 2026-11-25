@@ -2,6 +2,8 @@ import { LitElement, html } from 'lit'
 import { customElement, property, state } from 'lit/decorators.js'
 import { createAuth } from '../../auth/auth.ts'
 import { setAuth } from '../../auth/store.ts'
+import { createClient } from '../../client/client.ts'
+import { setClient } from '../../client/store.ts'
 import { describeFailure, loadConfig, setConfig } from '../../config/main.ts'
 import type { LoadFailure, MonkeyConfig } from '../../config/main.ts'
 
@@ -44,7 +46,10 @@ export class MonkeySetUp extends LitElement {
 
         if (result.ok) {
             setConfig(result.config)
-            setAuth(createAuth(result.config))
+            const auth = createAuth(result.config)
+
+            setAuth(auth)
+            setClient(createClient(result.config, { auth }))
             this.config = result.config
             this.failure = undefined
             this.dispatchEvent(new CustomEvent(CONFIG_READY, { bubbles: true, composed: true, detail: result.config }))

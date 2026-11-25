@@ -484,6 +484,9 @@
         },
         "pagination": {
           "$ref": "#/$defs/pagination"
+        },
+        "searchParam": {
+          "$ref": "#/$defs/fieldName"
         }
       }
     },

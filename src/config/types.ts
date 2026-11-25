@@ -99,6 +99,8 @@ export interface ListEndpointConfig extends EndpointConfig {
     readonly itemsPath?: string
     readonly totalPath?: string
     readonly pagination?: Pagination
+    // The query parameter that carries a search term. Without it the collection has no search.
+    readonly searchParam?: string
 }
 
 export interface BodyConfig {
