@@ -165,6 +165,32 @@ describe('bearer, API key and basic', () => {
     })
 })
 
+describe('401 from the API', () => {
+    it('should end the session, so the person signs in again', async () => {
+        const config = withAuth({ type: 'bearer' })
+        const session = createAuth(config)
+        const { fetcher } = fake(() => json({ error: { message: 'Token expired' } }, 401))
+
+        await session.signIn({ token: 'old' })
+
+        const result = await createClient(config, { fetch: fetcher, auth: session }).list('posts')
+
+        assert.equal(result.ok ? undefined : result.error.status, 401)
+        assert.equal(session.isSignedIn(), false)
+    })
+
+    it('should keep the session on other errors', async () => {
+        const config = withAuth({ type: 'bearer' })
+        const session = createAuth(config)
+        const { fetcher } = fake(() => json({}, 500))
+
+        await session.signIn({ token: 'abc' })
+        await createClient(config, { fetch: fetcher, auth: session }).list('posts')
+
+        assert.ok(session.isSignedIn())
+    })
+})
+
 describe('login endpoint', () => {
     const login: AuthConfig = { type: 'login', path: '/auth/login', tokenPath: 'data.token', expiresInPath: 'data.expires_in' }
     const answer = (call: Call): Response =>

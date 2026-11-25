@@ -88,6 +88,11 @@ export const createClient = (config: MonkeyConfig, options: ClientOptions = {}):
         })
 
         if (!response.ok) {
+            // The API does not accept the session any more, so the person has to sign in again.
+            if (response.status === 401) {
+                options.auth?.signOut()
+            }
+
             const { message, fieldErrors } = readError(response.status, response.body, errorsOf(config))
 
             throw failure('http', message, response.status, fieldErrors)
