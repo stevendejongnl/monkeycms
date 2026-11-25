@@ -24,7 +24,8 @@ export interface EntryMapping {
 }
 
 export interface RequestBodyMapping {
-    // Dot path that all field paths sit under, for example "data.attributes".
+    // Where the item sits in the request body, for example "data". The field paths sit under
+    // it. Leave out when the body is the item.
     wrap?: string
     fields: FieldMappings
     // Constant values, as API path to value. The paths do not use wrap.
