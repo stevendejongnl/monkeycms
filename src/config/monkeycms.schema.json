@@ -4,197 +4,596 @@
   "title": "MonkeyCMS mapping config",
   "description": "Describes an HTTP API for MonkeyCMS. Data only: the config never contains code.",
   "type": "object",
-  "required": ["configVersion", "baseUrl", "collections"],
+  "required": [
+    "configVersion",
+    "baseUrl",
+    "collections"
+  ],
   "additionalProperties": false,
   "properties": {
-    "configVersion": { "const": 1, "description": "Version of this schema." },
-    "baseUrl": { "type": "string", "minLength": 1, "description": "Every request goes under this http(s) URL." },
-    "auth": { "$ref": "#/$defs/auth" },
-    "headers": { "$ref": "#/$defs/stringMap" },
-    "pagination": { "$ref": "#/$defs/pagination" },
-    "errors": { "$ref": "#/$defs/errors" },
+    "configVersion": {
+      "const": 1,
+      "description": "Version of this schema."
+    },
+    "baseUrl": {
+      "type": "string",
+      "minLength": 1,
+      "description": "Every request goes under this http(s) URL."
+    },
+    "auth": {
+      "$ref": "#/$defs/auth"
+    },
+    "headers": {
+      "$ref": "#/$defs/stringMap"
+    },
+    "pagination": {
+      "$ref": "#/$defs/pagination"
+    },
+    "errors": {
+      "$ref": "#/$defs/errors"
+    },
     "collections": {
       "type": "object",
       "minProperties": 1,
-      "propertyNames": { "pattern": "^[a-z][a-z0-9_-]*$" },
-      "additionalProperties": { "$ref": "#/$defs/collection" }
+      "propertyNames": {
+        "pattern": "^[a-z][a-z0-9_-]*$"
+      },
+      "additionalProperties": {
+        "$ref": "#/$defs/collection"
+      }
     }
   },
   "$defs": {
-    "stringMap": { "type": "object", "additionalProperties": { "type": "string" } },
-    "path": { "type": "string", "minLength": 1, "description": "Dot notation (a.b[0].c) or JSON Pointer (/a/b/0/c)." },
-    "method": { "enum": ["GET", "POST", "PUT", "PATCH", "DELETE"] },
-    "auth": {
+    "stringMap": {
       "type": "object",
-      "required": ["type"],
-      "additionalProperties": false,
-      "properties": { "type": { "enum": ["none"] } }
+      "additionalProperties": {
+        "type": "string"
+      }
+    },
+    "path": {
+      "type": "string",
+      "minLength": 1,
+      "description": "Dot notation (a.b[0].c) or JSON Pointer (/a/b/0/c)."
+    },
+    "method": {
+      "enum": [
+        "GET",
+        "POST",
+        "PUT",
+        "PATCH",
+        "DELETE"
+      ]
+    },
+    "auth": {
+      "oneOf": [
+        {
+          "type": "object",
+          "required": [
+            "type"
+          ],
+          "additionalProperties": false,
+          "properties": {
+            "type": {
+              "const": "none"
+            }
+          }
+        },
+        {
+          "type": "object",
+          "required": [
+            "type"
+          ],
+          "additionalProperties": false,
+          "properties": {
+            "type": {
+              "const": "bearer"
+            },
+            "persist": {
+              "$ref": "#/$defs/persist"
+            }
+          }
+        },
+        {
+          "type": "object",
+          "required": [
+            "type",
+            "name",
+            "in"
+          ],
+          "additionalProperties": false,
+          "properties": {
+            "type": {
+              "const": "apiKey"
+            },
+            "persist": {
+              "$ref": "#/$defs/persist"
+            },
+            "name": {
+              "type": "string",
+              "pattern": "^[A-Za-z0-9_.-]+$"
+            },
+            "in": {
+              "enum": [
+                "header",
+                "query"
+              ]
+            }
+          }
+        },
+        {
+          "type": "object",
+          "required": [
+            "type"
+          ],
+          "additionalProperties": false,
+          "properties": {
+            "type": {
+              "const": "basic"
+            },
+            "persist": {
+              "$ref": "#/$defs/persist"
+            }
+          }
+        },
+        {
+          "type": "object",
+          "required": [
+            "type"
+          ],
+          "additionalProperties": false,
+          "properties": {
+            "type": {
+              "const": "cookie"
+            },
+            "persist": {
+              "$ref": "#/$defs/persist"
+            },
+            "path": {
+              "type": "string",
+              "minLength": 1
+            },
+            "method": {
+              "$ref": "#/$defs/loginMethod"
+            },
+            "usernameField": {
+              "$ref": "#/$defs/fieldName"
+            },
+            "passwordField": {
+              "$ref": "#/$defs/fieldName"
+            }
+          }
+        },
+        {
+          "type": "object",
+          "required": [
+            "type",
+            "path",
+            "tokenPath"
+          ],
+          "additionalProperties": false,
+          "properties": {
+            "type": {
+              "const": "login"
+            },
+            "persist": {
+              "$ref": "#/$defs/persist"
+            },
+            "path": {
+              "type": "string",
+              "minLength": 1
+            },
+            "method": {
+              "$ref": "#/$defs/loginMethod"
+            },
+            "usernameField": {
+              "$ref": "#/$defs/fieldName"
+            },
+            "passwordField": {
+              "$ref": "#/$defs/fieldName"
+            },
+            "tokenPath": {
+              "$ref": "#/$defs/path"
+            },
+            "expiresInPath": {
+              "$ref": "#/$defs/path"
+            },
+            "header": {
+              "$ref": "#/$defs/fieldName"
+            },
+            "scheme": {
+              "type": "string"
+            }
+          }
+        }
+      ]
     },
     "errors": {
       "type": "object",
       "additionalProperties": false,
       "properties": {
-        "messagePath": { "$ref": "#/$defs/path" },
-        "fieldErrorsPath": { "$ref": "#/$defs/path" }
+        "messagePath": {
+          "$ref": "#/$defs/path"
+        },
+        "fieldErrorsPath": {
+          "$ref": "#/$defs/path"
+        }
       }
     },
     "pagination": {
       "oneOf": [
         {
           "type": "object",
-          "required": ["type"],
-          "additionalProperties": false,
-          "properties": { "type": { "const": "none" } }
-        },
-        {
-          "type": "object",
-          "required": ["type", "pageParam", "limitParam", "pageSize"],
+          "required": [
+            "type"
+          ],
           "additionalProperties": false,
           "properties": {
-            "type": { "const": "page" },
-            "pageParam": { "type": "string", "minLength": 1 },
-            "limitParam": { "type": "string", "minLength": 1 },
-            "pageSize": { "type": "integer", "minimum": 1 },
-            "startPage": { "type": "integer", "minimum": 0 }
+            "type": {
+              "const": "none"
+            }
           }
         },
         {
           "type": "object",
-          "required": ["type", "offsetParam", "limitParam", "pageSize"],
+          "required": [
+            "type",
+            "pageParam",
+            "limitParam",
+            "pageSize"
+          ],
           "additionalProperties": false,
           "properties": {
-            "type": { "const": "offset" },
-            "offsetParam": { "type": "string", "minLength": 1 },
-            "limitParam": { "type": "string", "minLength": 1 },
-            "pageSize": { "type": "integer", "minimum": 1 }
+            "type": {
+              "const": "page"
+            },
+            "pageParam": {
+              "type": "string",
+              "minLength": 1
+            },
+            "limitParam": {
+              "type": "string",
+              "minLength": 1
+            },
+            "pageSize": {
+              "type": "integer",
+              "minimum": 1
+            },
+            "startPage": {
+              "type": "integer",
+              "minimum": 0
+            }
           }
         },
         {
           "type": "object",
-          "required": ["type", "cursorParam", "nextCursorPath", "pageSize"],
+          "required": [
+            "type",
+            "offsetParam",
+            "limitParam",
+            "pageSize"
+          ],
           "additionalProperties": false,
           "properties": {
-            "type": { "const": "cursor" },
-            "cursorParam": { "type": "string", "minLength": 1 },
-            "nextCursorPath": { "$ref": "#/$defs/path" },
-            "limitParam": { "type": "string", "minLength": 1 },
-            "pageSize": { "type": "integer", "minimum": 1 }
+            "type": {
+              "const": "offset"
+            },
+            "offsetParam": {
+              "type": "string",
+              "minLength": 1
+            },
+            "limitParam": {
+              "type": "string",
+              "minLength": 1
+            },
+            "pageSize": {
+              "type": "integer",
+              "minimum": 1
+            }
           }
         },
         {
           "type": "object",
-          "required": ["type", "pageSize"],
+          "required": [
+            "type",
+            "cursorParam",
+            "nextCursorPath",
+            "pageSize"
+          ],
           "additionalProperties": false,
           "properties": {
-            "type": { "const": "link-header" },
-            "limitParam": { "type": "string", "minLength": 1 },
-            "pageSize": { "type": "integer", "minimum": 1 }
+            "type": {
+              "const": "cursor"
+            },
+            "cursorParam": {
+              "type": "string",
+              "minLength": 1
+            },
+            "nextCursorPath": {
+              "$ref": "#/$defs/path"
+            },
+            "limitParam": {
+              "type": "string",
+              "minLength": 1
+            },
+            "pageSize": {
+              "type": "integer",
+              "minimum": 1
+            }
+          }
+        },
+        {
+          "type": "object",
+          "required": [
+            "type",
+            "pageSize"
+          ],
+          "additionalProperties": false,
+          "properties": {
+            "type": {
+              "const": "link-header"
+            },
+            "limitParam": {
+              "type": "string",
+              "minLength": 1
+            },
+            "pageSize": {
+              "type": "integer",
+              "minimum": 1
+            }
           }
         }
       ]
     },
     "transform": {
       "oneOf": [
-        { "type": "string", "enum": ["string", "number", "boolean", "date"] },
         {
-          "type": "object",
-          "required": ["type", "separator"],
-          "additionalProperties": false,
-          "properties": { "type": { "const": "join" }, "separator": { "type": "string" } }
+          "type": "string",
+          "enum": [
+            "string",
+            "number",
+            "boolean",
+            "date"
+          ]
         },
         {
           "type": "object",
-          "required": ["type", "separator"],
+          "required": [
+            "type",
+            "separator"
+          ],
           "additionalProperties": false,
-          "properties": { "type": { "const": "split" }, "separator": { "type": "string" } }
+          "properties": {
+            "type": {
+              "const": "join"
+            },
+            "separator": {
+              "type": "string"
+            }
+          }
         },
         {
           "type": "object",
-          "required": ["type", "value"],
+          "required": [
+            "type",
+            "separator"
+          ],
           "additionalProperties": false,
-          "properties": { "type": { "const": "default" }, "value": {} }
+          "properties": {
+            "type": {
+              "const": "split"
+            },
+            "separator": {
+              "type": "string"
+            }
+          }
+        },
+        {
+          "type": "object",
+          "required": [
+            "type",
+            "value"
+          ],
+          "additionalProperties": false,
+          "properties": {
+            "type": {
+              "const": "default"
+            },
+            "value": {}
+          }
         }
       ]
     },
     "field": {
       "type": "object",
-      "required": ["type"],
+      "required": [
+        "type"
+      ],
       "additionalProperties": false,
       "properties": {
-        "type": { "enum": ["text", "longtext", "number", "boolean", "date", "select"] },
-        "label": { "type": "string" },
-        "required": { "type": "boolean" },
-        "readOnly": { "type": "boolean" },
-        "path": { "$ref": "#/$defs/path" },
-        "transform": { "$ref": "#/$defs/transform" },
-        "options": { "type": "array", "minItems": 1, "items": { "type": "string" } }
+        "type": {
+          "enum": [
+            "text",
+            "longtext",
+            "number",
+            "boolean",
+            "date",
+            "select"
+          ]
+        },
+        "label": {
+          "type": "string"
+        },
+        "required": {
+          "type": "boolean"
+        },
+        "readOnly": {
+          "type": "boolean"
+        },
+        "path": {
+          "$ref": "#/$defs/path"
+        },
+        "transform": {
+          "$ref": "#/$defs/transform"
+        },
+        "options": {
+          "type": "array",
+          "minItems": 1,
+          "items": {
+            "type": "string"
+          }
+        }
       }
     },
     "body": {
       "type": "object",
       "additionalProperties": false,
       "properties": {
-        "wrap": { "$ref": "#/$defs/path" },
-        "static": { "type": "object" }
+        "wrap": {
+          "$ref": "#/$defs/path"
+        },
+        "static": {
+          "type": "object"
+        }
       }
     },
     "listEndpoint": {
       "type": "object",
-      "required": ["path"],
+      "required": [
+        "path"
+      ],
       "additionalProperties": false,
       "properties": {
-        "method": { "$ref": "#/$defs/method" },
-        "path": { "type": "string", "minLength": 1 },
-        "query": { "$ref": "#/$defs/stringMap" },
-        "headers": { "$ref": "#/$defs/stringMap" },
-        "itemsPath": { "$ref": "#/$defs/path" },
-        "totalPath": { "$ref": "#/$defs/path" },
-        "pagination": { "$ref": "#/$defs/pagination" }
+        "method": {
+          "$ref": "#/$defs/method"
+        },
+        "path": {
+          "type": "string",
+          "minLength": 1
+        },
+        "query": {
+          "$ref": "#/$defs/stringMap"
+        },
+        "headers": {
+          "$ref": "#/$defs/stringMap"
+        },
+        "itemsPath": {
+          "$ref": "#/$defs/path"
+        },
+        "totalPath": {
+          "$ref": "#/$defs/path"
+        },
+        "pagination": {
+          "$ref": "#/$defs/pagination"
+        }
       }
     },
     "itemEndpoint": {
       "type": "object",
-      "required": ["path"],
+      "required": [
+        "path"
+      ],
       "additionalProperties": false,
       "properties": {
-        "method": { "$ref": "#/$defs/method" },
-        "path": { "type": "string", "minLength": 1 },
-        "query": { "$ref": "#/$defs/stringMap" },
-        "headers": { "$ref": "#/$defs/stringMap" },
-        "itemPath": { "$ref": "#/$defs/path" },
-        "body": { "$ref": "#/$defs/body" }
+        "method": {
+          "$ref": "#/$defs/method"
+        },
+        "path": {
+          "type": "string",
+          "minLength": 1
+        },
+        "query": {
+          "$ref": "#/$defs/stringMap"
+        },
+        "headers": {
+          "$ref": "#/$defs/stringMap"
+        },
+        "itemPath": {
+          "$ref": "#/$defs/path"
+        },
+        "body": {
+          "$ref": "#/$defs/body"
+        }
       }
     },
     "deleteEndpoint": {
       "type": "object",
-      "required": ["path"],
+      "required": [
+        "path"
+      ],
       "additionalProperties": false,
       "properties": {
-        "method": { "$ref": "#/$defs/method" },
-        "path": { "type": "string", "minLength": 1 },
-        "query": { "$ref": "#/$defs/stringMap" },
-        "headers": { "$ref": "#/$defs/stringMap" }
+        "method": {
+          "$ref": "#/$defs/method"
+        },
+        "path": {
+          "type": "string",
+          "minLength": 1
+        },
+        "query": {
+          "$ref": "#/$defs/stringMap"
+        },
+        "headers": {
+          "$ref": "#/$defs/stringMap"
+        }
       }
     },
     "collection": {
       "type": "object",
-      "required": ["fields", "list"],
+      "required": [
+        "fields",
+        "list"
+      ],
       "additionalProperties": false,
       "properties": {
-        "label": { "type": "string" },
-        "idPath": { "$ref": "#/$defs/path" },
+        "label": {
+          "type": "string"
+        },
+        "idPath": {
+          "$ref": "#/$defs/path"
+        },
         "fields": {
           "type": "object",
           "minProperties": 1,
-          "propertyNames": { "pattern": "^[A-Za-z][A-Za-z0-9_]*$" },
-          "additionalProperties": { "$ref": "#/$defs/field" }
+          "propertyNames": {
+            "pattern": "^[A-Za-z][A-Za-z0-9_]*$"
+          },
+          "additionalProperties": {
+            "$ref": "#/$defs/field"
+          }
         },
-        "list": { "$ref": "#/$defs/listEndpoint" },
-        "get": { "$ref": "#/$defs/itemEndpoint" },
-        "create": { "$ref": "#/$defs/itemEndpoint" },
-        "update": { "$ref": "#/$defs/itemEndpoint" },
-        "delete": { "$ref": "#/$defs/deleteEndpoint" }
+        "list": {
+          "$ref": "#/$defs/listEndpoint"
+        },
+        "get": {
+          "$ref": "#/$defs/itemEndpoint"
+        },
+        "create": {
+          "$ref": "#/$defs/itemEndpoint"
+        },
+        "update": {
+          "$ref": "#/$defs/itemEndpoint"
+        },
+        "delete": {
+          "$ref": "#/$defs/deleteEndpoint"
+        }
       }
+    },
+    "persist": {
+      "enum": [
+        "memory",
+        "session"
+      ],
+      "description": "Where the session is kept. memory (default) is lost on reload."
+    },
+    "fieldName": {
+      "type": "string",
+      "pattern": "^[A-Za-z0-9_.-]+$"
+    },
+    "loginMethod": {
+      "enum": [
+        "POST",
+        "PUT"
+      ]
     }
   }
 }

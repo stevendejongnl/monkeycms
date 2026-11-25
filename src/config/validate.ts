@@ -18,6 +18,8 @@ const present = <T>(value: T | undefined): value is T => value !== undefined
 // Every API path in the config, with the config path where it was written.
 const pathsOf = (config: MonkeyConfig): [string, string][] => [
     ...[
+        ['auth.tokenPath', config.auth?.type === 'login' ? config.auth.tokenPath : undefined],
+        ['auth.expiresInPath', config.auth?.type === 'login' ? config.auth.expiresInPath : undefined],
         ['errors.messagePath', config.errors?.messagePath],
         ['errors.fieldErrorsPath', config.errors?.fieldErrorsPath],
         ['pagination.nextCursorPath', config.pagination?.type === 'cursor' ? config.pagination.nextCursorPath : undefined],

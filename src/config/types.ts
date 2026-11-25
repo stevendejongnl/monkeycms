@@ -9,10 +9,69 @@ export type Operation = 'list' | 'get' | 'create' | 'update' | 'delete'
 
 export type HttpMethod = 'GET' | 'POST' | 'PUT' | 'PATCH' | 'DELETE'
 
-// Authentication is added in MONKY-21. Until then the only type is "none".
-export interface AuthConfig {
+// How the client signs in. The config never holds a secret: the person enters the
+// credentials at runtime, and the session is kept in memory unless persist is "session".
+// "session" keeps the session (the token or the key, never a password) in sessionStorage,
+// so it survives a reload of the tab but can be read by any script on the page.
+export type Persist = 'memory' | 'session'
+
+interface AuthBase {
+    readonly persist?: Persist
+}
+
+// Where to send the credentials, and how the body looks.
+interface LoginBody {
+    // Path template under baseUrl.
+    readonly path: string
+    readonly method?: 'POST' | 'PUT'
+    // The JSON keys of the body. They default to "username" and "password".
+    readonly usernameField?: string
+    readonly passwordField?: string
+}
+
+export interface NoAuth {
     readonly type: 'none'
 }
+
+// The person enters a token. It is sent as "Authorization: Bearer <token>".
+export interface BearerAuth extends AuthBase {
+    readonly type: 'bearer'
+}
+
+// The person enters a key. It is sent in a header or in the query.
+export interface ApiKeyAuth extends AuthBase {
+    readonly type: 'apiKey'
+    readonly name: string
+    readonly in: 'header' | 'query'
+}
+
+// The person enters a username and a password. They are sent as "Authorization: Basic ...".
+export interface BasicAuth extends AuthBase {
+    readonly type: 'basic'
+}
+
+// The browser keeps the session in a cookie, and requests are sent with credentials. With a
+// path, the person signs in there and the API sets the cookie. Without a path, the session
+// already exists, for example because the user signed in somewhere else on the same site.
+export interface CookieAuth extends AuthBase, Partial<LoginBody> {
+    readonly type: 'cookie'
+}
+
+// The person signs in at an endpoint that returns a token.
+export interface LoginAuth extends AuthBase, LoginBody {
+    readonly type: 'login'
+    // Where the token is in the response.
+    readonly tokenPath: string
+    // Where the lifetime of the token in seconds is in the response. Without it the token
+    // does not expire on the client.
+    readonly expiresInPath?: string
+    // The header that carries the token. Defaults to "authorization".
+    readonly header?: string
+    // The word before the token. Defaults to "Bearer". An empty string sends the bare token.
+    readonly scheme?: string
+}
+
+export type AuthConfig = NoAuth | BearerAuth | ApiKeyAuth | BasicAuth | CookieAuth | LoginAuth
 
 export interface FieldConfig {
     readonly type: FieldType

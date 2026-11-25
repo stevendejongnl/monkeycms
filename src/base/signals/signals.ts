@@ -94,17 +94,19 @@ type Stored<T> = { readonly value: T } | undefined
 
 // The storage can be missing or can throw (private mode, blocked site data), so every
 // access is guarded and the signal still works in memory without it.
-const storage = (): Storage | undefined => {
+type StorageArea = 'localStorage' | 'sessionStorage'
+
+const storage = (area: StorageArea): Storage | undefined => {
     try {
-        return globalThis.localStorage
+        return globalThis[area]
     } catch {
         return undefined
     }
 }
 
-const readStored = <T>(key: string, validate: (value: unknown) => value is T): Stored<T> => {
+const readStored = <T>(area: StorageArea, key: string, validate: (value: unknown) => value is T): Stored<T> => {
     try {
-        const raw = storage()?.getItem(key)
+        const raw = storage(area)?.getItem(key)
         const parsed: unknown = raw === null || raw === undefined ? undefined : JSON.parse(raw)
 
         return raw !== null && raw !== undefined && validate(parsed) ? { value: parsed } : undefined
@@ -113,9 +115,9 @@ const readStored = <T>(key: string, validate: (value: unknown) => value is T): S
     }
 }
 
-const writeStored = (key: string, value: unknown): void => {
+const writeStored = (area: StorageArea, key: string, value: unknown): void => {
     try {
-        storage()?.setItem(key, JSON.stringify(value))
+        storage(area)?.setItem(key, JSON.stringify(value))
     } catch {
         // The storage is full or blocked. The value stays in memory.
     }
@@ -125,30 +127,49 @@ const valueOr = <T>(stored: Stored<T>, fallback: T): T => stored === undefined ?
 
 const anything = <T>(_value: unknown): _value is T => true
 
-// A signal that is saved in localStorage when it is set. A stored value that is missing,
-// is not JSON, or fails validate is ignored, and the initial value is used. The signal
-// follows changes that another tab makes. The third item removes that listener.
-export const createLocalStorageSignal = <T>(
+// A signal that is saved in the storage area when it is set. A stored value that is
+// missing, is not JSON, or fails validate is ignored, and the initial value is used. The
+// third item removes the listener that follows changes from other tabs.
+const createStoredSignal = <T>(
+    area: StorageArea,
     key: string,
     initialValue: T,
-    validate: (value: unknown) => value is T = anything
+    validate: (value: unknown) => value is T
 ): [Getter<T>, Setter<T>, () => void] => {
-    const [get, setValue] = createSignal<T>(valueOr(readStored(key, validate), initialValue))
+    const [get, setValue] = createSignal<T>(valueOr(readStored(area, key, validate), initialValue))
 
     const onStorage = (event: StorageEvent): void => {
         if (event.key === key || event.key === null) {
-            setValue(valueOr(readStored(key, validate), initialValue))
+            setValue(valueOr(readStored(area, key, validate), initialValue))
         }
     }
 
-    globalThis.addEventListener?.('storage', onStorage)
+    // Other tabs share localStorage. Each tab has its own sessionStorage.
+    const listens = area === 'localStorage'
+
+    if (listens) {
+        globalThis.addEventListener?.('storage', onStorage)
+    }
 
     return [
         get,
         (newValue) => {
             setValue(newValue)
-            writeStored(key, newValue)
+            writeStored(area, key, newValue)
         },
-        () => globalThis.removeEventListener?.('storage', onStorage),
+        () => listens ? globalThis.removeEventListener?.('storage', onStorage) : undefined,
     ]
 }
+
+export const createLocalStorageSignal = <T>(
+    key: string,
+    initialValue: T,
+    validate: (value: unknown) => value is T = anything
+): [Getter<T>, Setter<T>, () => void] => createStoredSignal('localStorage', key, initialValue, validate)
+
+// For data that must not outlive the tab, such as a session.
+export const createSessionStorageSignal = <T>(
+    key: string,
+    initialValue: T,
+    validate: (value: unknown) => value is T = anything
+): [Getter<T>, Setter<T>, () => void] => createStoredSignal('sessionStorage', key, initialValue, validate)
