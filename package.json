@@ -24,12 +24,11 @@
   "author": "Steven de Jong <steven@steven-dejong.nl>",
   "license": "AGPL-3.0-only",
   "dependencies": {
-    "@preact/signals-core": "^1.14.5",
     "lit": "^3.3.3"
   },
   "devDependencies": {
     "@playwright/test": "^1.65.1",
-    "@types/node": "^26.6.6",
+    "@types/node": "^26.6.10",
     "esbuild": "^0.28.2",
     "typescript": "^7.0.2"
   }
