@@ -1,0 +1,360 @@
+import { expect, test } from '@playwright/test'
+import type { Page } from '@playwright/test'
+
+
+interface Post {
+    id: number
+    title: string
+    status?: string
+    body?: string
+}
+
+const config = (auth: object = { type: 'none' }) => ({
+    configVersion: 1,
+    baseUrl: 'https://api.example.com',
+    auth,
+    errors: { messagePath: 'message', fieldErrorsPath: 'errors' },
+    pagination: { type: 'page', pageParam: 'page', limitParam: 'limit', pageSize: 2 },
+    collections: {
+        posts: {
+            label: 'Posts',
+            fields: {
+                title: { type: 'text', label: 'Title', required: true },
+                status: { type: 'select', label: 'Status', options: ['draft', 'published'] },
+                body: { type: 'longtext', label: 'Body' },
+            },
+            list: { path: '/posts', itemsPath: 'data', totalPath: 'total', searchParam: 'q' },
+            get: { path: '/posts/{id}', itemPath: 'data' },
+            create: { path: '/posts', itemPath: 'data' },
+            update: { path: '/posts/{id}', itemPath: 'data' },
+            delete: { path: '/posts/{id}' },
+        },
+        notes: {
+            fields: { text: { type: 'text' } },
+            list: { path: '/notes', itemsPath: 'data' },
+        },
+    },
+})
+
+// An API in the page: keeps the posts in memory and records each request.
+const serve = async (page: Page, posts: Post[], requests: string[] = []) => {
+    let nextId = 100
+
+    await page.route('https://api.example.com/**', async (route) => {
+        const request = route.request()
+        const url = new URL(request.url())
+        const id = Number(url.pathname.split('/')[2])
+
+        requests.push(`${request.method()} ${url.pathname}${url.search}`)
+
+        if (url.pathname === '/notes') {
+            return route.fulfill({ json: { data: [] } })
+        }
+
+        if (request.method() === 'GET' && Number.isNaN(id)) {
+            const term = url.searchParams.get('q') ?? ''
+            const size = Number(url.searchParams.get('limit'))
+            const start = (Number(url.searchParams.get('page')) - 1) * size
+            const found = posts.filter(({ title }) => title.includes(term))
+
+            return route.fulfill({ json: { data: found.slice(start, start + size), total: found.length } })
+        }
+
+        if (request.method() === 'GET') {
+            return route.fulfill({ json: { data: posts.find((post) => post.id === id) } })
+        }
+
+        if (request.method() === 'DELETE') {
+            posts.splice(posts.findIndex((post) => post.id === id), 1)
+
+            return route.fulfill({ status: 204, body: '' })
+        }
+
+        const body = request.postDataJSON() as Omit<Post, 'id'>
+
+        if (body.title === 'taken') {
+            return route.fulfill({ status: 422, json: { message: 'Not saved', errors: { title: 'This title is taken' } } })
+        }
+
+        const saved = request.method() === 'POST' ? { id: nextId++, ...body } : { ...posts.find((post) => post.id === id), ...body, id }
+
+        request.method() === 'POST' ? posts.push(saved) : posts.splice(posts.findIndex((post) => post.id === id), 1, saved)
+
+        return route.fulfill({ json: { data: saved } })
+    })
+}
+
+const open = async (page: Page, hash = '', auth?: object) => {
+    await page.goto(`/public/index.html${hash}`)
+    await page.evaluate((json) => {
+        const setUp = document.createElement('monkey-set-up')
+
+        setUp.setAttribute('config', JSON.stringify(json))
+        document.body.append(setUp, document.createElement('monkey-app'))
+    }, config(auth))
+    await expect(page.locator('monkey-set-up[config]').getByRole('status')).toBeVisible()
+}
+
+const threePosts = (): Post[] => [
+    { id: 1, title: 'First post', status: 'draft', body: 'long text one' },
+    { id: 2, title: 'Second post', status: 'published', body: 'long text two' },
+    { id: 3, title: 'Third thing' },
+]
+
+const app = (page: Page) => page.locator('monkey-app')
+
+test.describe('collection list', () => {
+    test('should show the entries in a table with the labels of the fields', async ({ page }) => {
+        await serve(page, threePosts())
+        await open(page, '#/posts')
+
+        await expect(app(page).getByRole('heading', { name: 'Posts', exact: true })).toBeVisible()
+        await expect(app(page).getByRole('columnheader')).toHaveText(['Title', 'Status', 'Actions'])
+        await expect(app(page).getByRole('row')).toHaveCount(3)
+        await expect(app(page).getByRole('cell', { name: 'First post', exact: true })).toBeVisible()
+        await expect(app(page).getByText('3 entries')).toBeVisible()
+        await expect(app(page).getByText('long text one')).toHaveCount(0)
+    })
+
+    test('should page forward and back', async ({ page }) => {
+        const requests: string[] = []
+
+        await serve(page, threePosts(), requests)
+        await open(page, '#/posts')
+
+        const previous = app(page).getByRole('button', { name: 'Previous' })
+        const next = app(page).getByRole('button', { name: 'Next' })
+
+        await expect(previous).toBeDisabled()
+        await next.click()
+        await expect(app(page).getByRole('cell', { name: 'Third thing', exact: true })).toBeVisible()
+        await expect(next).toBeDisabled()
+        await previous.click()
+        await expect(app(page).getByRole('cell', { name: 'First post', exact: true })).toBeVisible()
+        expect(requests.map((request) => request.match(/page=\d/)?.[0])).toEqual(['page=1', 'page=2', 'page=1'])
+    })
+
+    test('should search, and say when nothing is found', async ({ page }) => {
+        await serve(page, threePosts())
+        await open(page, '#/posts')
+        await app(page).getByRole('searchbox', { name: 'Search' }).fill('Second')
+        await app(page).getByRole('button', { name: 'Search' }).click()
+
+        await expect(app(page).getByRole('row')).toHaveCount(2)
+
+        await app(page).getByRole('searchbox', { name: 'Search' }).fill('nothing like it')
+        await app(page).getByRole('button', { name: 'Search' }).click()
+
+        await expect(app(page).getByRole('status')).toHaveText('No entries found')
+    })
+
+    test('should have no search for a collection without a searchParam', async ({ page }) => {
+        await serve(page, [])
+        await open(page, '#/notes')
+
+        await expect(app(page).getByRole('status')).toHaveText('No entries yet')
+        await expect(app(page).getByRole('searchbox')).toHaveCount(0)
+        await expect(app(page).getByRole('link', { name: 'New' })).toHaveCount(0)
+    })
+
+    test('should delete only after a confirmation', async ({ page }) => {
+        const requests: string[] = []
+
+        await serve(page, threePosts(), requests)
+        await open(page, '#/posts')
+        await app(page).getByRole('button', { name: 'Delete First post' }).click()
+        await app(page).getByRole('button', { name: 'Cancel' }).click()
+
+        expect(requests.some((request) => request.startsWith('DELETE'))).toBe(false)
+
+        await app(page).getByRole('button', { name: 'Delete First post' }).click()
+        await app(page).getByRole('button', { name: 'Confirm delete' }).click()
+
+        await expect(app(page).getByRole('cell', { name: 'First post', exact: true })).toHaveCount(0)
+        expect(requests).toContain('DELETE /posts/1')
+    })
+
+    test('should say when the API fails', async ({ page }) => {
+        await page.route('https://api.example.com/**', (route) => route.fulfill({ status: 500, json: { message: 'Database is down' } }))
+        await open(page, '#/posts')
+
+        await expect(app(page).getByRole('alert')).toHaveText('Database is down')
+    })
+
+    test('should say when the collection does not exist', async ({ page }) => {
+        await serve(page, [])
+        await open(page, '#/nothing')
+
+        await expect(app(page).getByRole('alert')).toContainText('There is no collection "nothing"')
+    })
+})
+
+test.describe('navigation', () => {
+    test('should show the menu, mark the active collection and switch', async ({ page }) => {
+        await serve(page, threePosts())
+        await open(page, '#/posts')
+
+        await expect(app(page).getByRole('link', { name: 'Posts' })).toHaveAttribute('aria-current', 'page')
+        await app(page).getByRole('link', { name: 'notes' }).click()
+
+        await expect(app(page).getByRole('heading', { name: 'notes', exact: true })).toBeVisible()
+        expect(page.url()).toMatch(/#\/notes$/)
+    })
+
+    test('should follow the back button', async ({ page }) => {
+        await serve(page, threePosts())
+        await open(page, '#/posts')
+        await app(page).getByRole('link', { name: 'notes' }).click()
+        await page.goBack()
+
+        await expect(app(page).getByRole('heading', { name: 'Posts', exact: true })).toBeVisible()
+    })
+
+    test('should open the editor from a link in the list', async ({ page }) => {
+        await serve(page, threePosts())
+        await open(page, '#/posts')
+        await app(page).getByRole('link', { name: 'Edit Second post' }).click()
+
+        await expect(app(page).getByLabel('Title')).toHaveValue('Second post')
+        await expect(app(page).getByLabel('Status')).toHaveValue('published')
+        await expect(app(page).getByLabel('Body')).toHaveValue('long text two')
+        expect(page.url()).toMatch(/#\/posts\/2$/)
+    })
+
+    test('should show only the sign-in until the person has signed in', async ({ page }) => {
+        await serve(page, threePosts())
+        await open(page, '#/posts', { type: 'bearer' })
+
+        await expect(app(page).getByLabel('Token')).toBeVisible()
+        await expect(app(page).getByRole('navigation')).toHaveCount(0)
+
+        await app(page).getByLabel('Token').fill('abc')
+        await app(page).getByRole('button', { name: 'Sign in' }).click()
+
+        await expect(app(page).getByRole('heading', { name: 'Posts', exact: true })).toBeVisible()
+    })
+})
+
+test.describe('entry editor', () => {
+    test('should check the values before it sends anything', async ({ page }) => {
+        const requests: string[] = []
+
+        await serve(page, threePosts(), requests)
+        await open(page, '#/posts/new')
+        await app(page).getByRole('button', { name: 'Save' }).click()
+
+        await expect(app(page).getByRole('alert').filter({ hasText: 'This field is required' })).toBeVisible()
+        await expect(app(page).getByLabel('Title')).toHaveAttribute('aria-invalid', 'true')
+        expect(requests.filter((request) => request.startsWith('POST'))).toEqual([])
+    })
+
+    test('should clear the error of a field when the person changes it', async ({ page }) => {
+        await serve(page, threePosts())
+        await open(page, '#/posts/new')
+        await app(page).getByRole('button', { name: 'Save' }).click()
+        await app(page).getByLabel('Title').fill('x')
+
+        await expect(app(page).getByLabel('Title')).toHaveAttribute('aria-invalid', 'false')
+    })
+
+    test('should create an entry, and go back to the list', async ({ page }) => {
+        const posts = threePosts()
+
+        await serve(page, posts)
+        await open(page, '#/posts/new')
+        await app(page).getByLabel('Title').fill('Brand new')
+        await app(page).getByLabel('Status').selectOption('draft')
+        await app(page).getByRole('button', { name: 'Save' }).click()
+
+        await expect(app(page).getByRole('heading', { name: 'Posts', exact: true })).toBeVisible()
+        expect(page.url()).toMatch(/#\/posts$/)
+        expect(posts.at(-1)).toMatchObject({ title: 'Brand new', status: 'draft' })
+    })
+
+    test('should update an entry', async ({ page }) => {
+        const posts = threePosts()
+
+        await serve(page, posts)
+        await open(page, '#/posts/1')
+        await app(page).getByLabel('Title').fill('First, changed')
+        await app(page).getByRole('button', { name: 'Save' }).click()
+
+        await expect(app(page).getByRole('heading', { name: 'Posts', exact: true })).toBeVisible()
+        expect(posts[0]).toMatchObject({ id: 1, title: 'First, changed', body: 'long text one' })
+    })
+
+    test('should show an error of the API at its field', async ({ page }) => {
+        await serve(page, threePosts())
+        await open(page, '#/posts/new')
+        await app(page).getByLabel('Title').fill('taken')
+        await app(page).getByRole('button', { name: 'Save' }).click()
+
+        await expect(app(page).getByLabel('Title')).toHaveAccessibleDescription('This title is taken')
+        await expect(app(page).getByRole('alert').filter({ hasText: 'Not saved' })).toBeVisible()
+        await expect(app(page).getByRole('heading', { name: /New/ })).toBeVisible()
+    })
+
+    test('should say when the entry does not exist', async ({ page }) => {
+        await page.route('https://api.example.com/**', (route) => route.fulfill({ status: 404, json: { message: 'No such post' } }))
+        await open(page, '#/posts/99')
+
+        await expect(app(page).getByRole('alert')).toHaveText('No such post')
+    })
+})
+
+test.describe('unsaved changes', () => {
+    test('should ask before it leaves a changed entry, and stay when the person says no', async ({ page }) => {
+        await serve(page, threePosts())
+        await open(page, '#/posts/1')
+        await app(page).getByLabel('Title').fill('Changed')
+
+        const questions: string[] = []
+
+        // The click waits for the dialog, so the dialog is handled by a listener.
+        page.once('dialog', (dialog) => { questions.push(dialog.message()); void dialog.dismiss() })
+        await app(page).getByRole('link', { name: 'Cancel' }).click()
+
+        await expect.poll(() => questions).toEqual(['You have unsaved changes. Leave without saving?'])
+        await expect(app(page).getByLabel('Title')).toHaveValue('Changed')
+        await expect.poll(() => page.url()).toMatch(/#\/posts\/1$/)
+    })
+
+    test('should leave when the person says yes', async ({ page }) => {
+        await serve(page, threePosts())
+        await open(page, '#/posts/1')
+        await app(page).getByLabel('Title').fill('Changed')
+        page.once('dialog', (dialog) => { void dialog.accept() })
+        await app(page).getByRole('link', { name: 'Cancel' }).click()
+
+        await expect(app(page).getByRole('heading', { name: 'Posts', exact: true })).toBeVisible()
+    })
+
+    test('should not ask when nothing changed, or when the change is put back', async ({ page }) => {
+        await serve(page, threePosts())
+        await open(page, '#/posts/1')
+
+        let asked = false
+
+        page.on('dialog', (dialog) => { asked = true; void dialog.dismiss() })
+        await app(page).getByLabel('Title').fill('Changed')
+        await app(page).getByLabel('Title').fill('First post')
+        await app(page).getByRole('link', { name: 'Cancel' }).click()
+
+        await expect(app(page).getByRole('heading', { name: 'Posts', exact: true })).toBeVisible()
+        expect(asked).toBe(false)
+    })
+
+    test('should not ask after a save', async ({ page }) => {
+        await serve(page, threePosts())
+        await open(page, '#/posts/1')
+
+        let asked = false
+
+        page.on('dialog', (dialog) => { asked = true; void dialog.dismiss() })
+        await app(page).getByLabel('Title').fill('Changed')
+        await app(page).getByRole('button', { name: 'Save' }).click()
+
+        await expect(app(page).getByRole('heading', { name: 'Posts', exact: true })).toBeVisible()
+        expect(asked).toBe(false)
+    })
+})

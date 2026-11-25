@@ -36,6 +36,8 @@ export interface ListOptions extends CallOptions {
     readonly page?: PageState
     // Values for the {name} placeholders in the query of the list endpoint, for example a search term.
     readonly vars?: Readonly<Record<string, unknown>>
+    // A search term. It is sent in the searchParam of the list endpoint, and only when it is not empty.
+    readonly search?: string
 }
 
 export interface ApiClient {

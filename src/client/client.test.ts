@@ -85,6 +85,26 @@ describe('API style: JSON:API with page and limit', () => {
         assert.equal(page.next, null)
     })
 
+    it('should send a search term in the search parameter, and only when it has text', async () => {
+        const config: MonkeyConfig = { ...blogConfig, collections: { posts: { ...blogConfig.collections['posts']!, list: { ...blogConfig.collections['posts']!.list, searchParam: 'q' } } } }
+        const { fetcher, calls } = fake(() => json({ data: [], meta: { total: 0 } }))
+        const client = createClient(config, { fetch: fetcher })
+
+        await client.list('posts', { search: '  monkey cms ' })
+        await client.list('posts', { search: '   ' })
+
+        assert.equal(new URL(calls[0]?.url ?? '').searchParams.get('q'), 'monkey cms')
+        assert.equal(new URL(calls[1]?.url ?? '').searchParams.has('q'), false)
+    })
+
+    it('should not send a search term to a collection that has no search parameter', async () => {
+        const { client, calls } = clientFor(() => json({ data: [], meta: { total: 0 } }))
+
+        await client.list('posts', { search: 'monkey' })
+
+        assert.equal(new URL(calls[0]?.url ?? '').searchParams.has('q'), false)
+    })
+
     it('should get one entry', async () => {
         const { client, calls } = clientFor(() => json({ data: item(7) }))
         const entry = valueOf(await client.get('posts', '7'))

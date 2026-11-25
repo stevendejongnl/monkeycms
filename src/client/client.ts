@@ -110,14 +110,17 @@ export const createClient = (config: MonkeyConfig, options: ClientOptions = {}):
         })
 
     return {
-        list: (collection, { page = firstPage, vars, signal } = {}) =>
+        list: (collection, { page = firstPage, vars, search = '', signal } = {}) =>
             toResult<ListPage>(async () => {
                 const found = collectionOf(config, collection)
                 const pagination = paginationOf(config, found)
                 const { response } = await exchange({
                     operation: 'list',
                     collection,
-                    extraQuery: pageQuery(pagination, page),
+                    extraQuery: {
+                        ...pageQuery(pagination, page),
+                        ...(found.list.searchParam === undefined || search.trim() === '' ? {} : { [found.list.searchParam]: search.trim() }),
+                    },
                     ...(vars === undefined ? {} : { vars: { ...vars } }),
                     ...(page.url === undefined ? {} : { pageUrl: page.url }),
                     ...(signal === undefined ? {} : { signal }),

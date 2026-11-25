@@ -144,6 +144,13 @@ describe('validateConfig', () => {
         ])
     })
 
+    it('should accept a search parameter and refuse a bad one', () => {
+        assert.deepEqual(issuesOf(changed((c) => { c.collections.posts.list.searchParam = 'q' })), [])
+        assert.deepEqual(issuesOf(changed((c) => { c.collections.posts.list.searchParam = 'a b' })), [
+            'collections.posts.list.searchParam|must match the pattern ^[A-Za-z0-9_.-]+$',
+        ])
+    })
+
     it('should accept every auth type', () => {
         const all = [
             { type: 'none' },
