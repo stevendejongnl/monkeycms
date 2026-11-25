@@ -144,8 +144,46 @@ describe('validateConfig', () => {
         ])
     })
 
-    it('should refuse an auth type that does not exist yet', () => {
-        assert.deepEqual(issuesOf(changed((c) => { c.auth = { type: 'bearer' } })), ['auth.type|must be one of: "none"'])
+    it('should accept every auth type', () => {
+        const all = [
+            { type: 'none' },
+            { type: 'bearer', persist: 'session' },
+            { type: 'apiKey', name: 'x-api-key', in: 'header' },
+            { type: 'apiKey', name: 'key', in: 'query' },
+            { type: 'basic' },
+            { type: 'cookie' },
+            { type: 'cookie', path: '/session', usernameField: 'email' },
+            { type: 'login', path: '/login', tokenPath: 'data.token', expiresInPath: 'data.expires_in', header: 'x-token', scheme: '' },
+        ]
+
+        all.forEach((auth) => assert.deepEqual(issuesOf(changed((c) => { c.auth = auth })), [], JSON.stringify(auth)))
+    })
+
+    it('should refuse an auth type that does not exist', () => {
+        assert.deepEqual(issuesOf(changed((c) => { c.auth = { type: 'oauth' } })), ['auth|does not match any allowed shape'])
+    })
+
+    it('should report what is missing or wrong in an auth block', () => {
+        assert.deepEqual(issuesOf(changed((c) => { c.auth = { type: 'login', path: '/login' } })), ['auth.tokenPath|is required'])
+        assert.deepEqual(issuesOf(changed((c) => { c.auth = { type: 'apiKey', name: 'k' } })), ['auth.in|is required'])
+        assert.deepEqual(issuesOf(changed((c) => { c.auth = { type: 'apiKey', name: 'bad name', in: 'cookie' } })), [
+            'auth.name|must match the pattern ^[A-Za-z0-9_.-]+$',
+            'auth.in|must be one of: "header", "query"',
+        ])
+        assert.deepEqual(issuesOf(changed((c) => { c.auth = { type: 'bearer', persist: 'forever' } })), [
+            'auth.persist|must be one of: "memory", "session"',
+        ])
+    })
+
+    it('should not take a secret in the config', () => {
+        assert.deepEqual(issuesOf(changed((c) => { c.auth = { type: 'bearer', token: 'secret' } })), ['auth.token|is not a known key'])
+        assert.deepEqual(issuesOf(changed((c) => { c.auth = { type: 'basic', password: 'secret' } })), ['auth.password|is not a known key'])
+    })
+
+    it('should check the token paths of a login', () => {
+        assert.deepEqual(issuesOf(changed((c) => { c.auth = { type: 'login', path: '/l', tokenPath: 'a..b' } })), [
+            'auth.tokenPath|is not a valid path: Invalid path "a..b"',
+        ])
     })
 
     it('should not run the other rules when the shape is wrong', () => {

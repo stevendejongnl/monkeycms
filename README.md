@@ -54,7 +54,27 @@ The config says:
 - how pagination works: page and limit, offset and limit, cursor, Link header or none;
 - where an error response keeps its message.
 
-The config format and its schema are planned work. See the roadmap.
+The config format is described by `src/config/monkeycms.schema.json`.
+
+### Authentication
+
+The `auth` block says how to sign in. It never holds a secret. The person enters the credentials at runtime.
+
+| `type` | The person enters | MonkeyCMS sends |
+|--------|-------------------|-----------------|
+| `none` | nothing | nothing |
+| `bearer` | a token | `Authorization: Bearer <token>` |
+| `apiKey` (`name`, `in`: `header` or `query`) | a key | the key in that header or query parameter |
+| `basic` | username and password | `Authorization: Basic ...` |
+| `cookie` | nothing, or username and password when `path` is set | cookies, with `credentials: "include"` |
+| `login` (`path`, `tokenPath`, optional `expiresInPath`, `header`, `scheme`) | username and password | the token from the login answer |
+
+Where the session is kept (`persist`):
+
+- `memory` (default). The session is lost when the tab reloads. No script that runs later can read it from storage.
+- `session`. The session is kept in `sessionStorage`, so a reload does not sign the person out. Any script on the same origin can read it, so use it only when you trust all scripts on the page. It is never shared with other tabs and is deleted when the tab closes.
+
+A password is only used for the sign-in request. MonkeyCMS does not keep it. For `login`, a token that has an expiry is dropped on the client when the time is up. With cookie sessions the browser keeps the cookie, so the API must set the correct `SameSite` and CORS headers (`Access-Control-Allow-Credentials`).
 
 ### Out of scope
 

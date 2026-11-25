@@ -15,6 +15,8 @@ export interface HttpResponse {
 export interface SendOptions {
     readonly timeoutMs: number
     readonly signal?: AbortSignal
+    // "include" sends and accepts cookies, also on another origin.
+    readonly credentials?: RequestCredentials
 }
 
 const parseJson = (text: string): unknown => {
@@ -29,7 +31,7 @@ const messageOf = (error: unknown): string => error instanceof Error ? error.mes
 
 // Sends one request. The request ends when the API answers, when the time is up, or when the
 // caller cancels. Anything that goes wrong is thrown as a Failure.
-export const send = async (fetcher: Fetcher, request: RequestDescription, { timeoutMs, signal }: SendOptions): Promise<HttpResponse> => {
+export const send = async (fetcher: Fetcher, request: RequestDescription, { timeoutMs, signal, credentials }: SendOptions): Promise<HttpResponse> => {
     const limit = AbortSignal.any([AbortSignal.timeout(timeoutMs), ...(signal === undefined ? [] : [signal])])
 
     try {
@@ -37,6 +39,7 @@ export const send = async (fetcher: Fetcher, request: RequestDescription, { time
             method: request.method,
             headers: request.headers as Record<string, string>,
             signal: limit,
+            ...(credentials === undefined ? {} : { credentials }),
             ...(request.body === undefined ? {} : { body: request.body }),
         })
         const text = await response.text()

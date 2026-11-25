@@ -2,16 +2,20 @@ import type { CollectionConfig, MonkeyConfig, Operation } from '../config/main.t
 import { endpointOf, entryResponseOf, errorsOf, headersOf, listResponseOf, paginationOf } from '../config/main.ts'
 import type { EndpointMapping, RequestDescription } from '../mapping/main.ts'
 import { buildRequest, firstPage, MappingError, nextPage, pageQuery, readEntry, readError, readList } from '../mapping/main.ts'
-import { Failure, failure } from './failure.ts'
+import type { Auth } from '../auth/main.ts'
+import type { Failure } from './failure.ts'
+import { failure, toResult } from './failure.ts'
 import { send } from './transport.ts'
 import type { Fetcher, HttpResponse } from './transport.ts'
-import type { ApiClient, ErrorKind, ListPage, Result } from './types.ts'
+import type { ApiClient, ErrorKind, ListPage } from './types.ts'
 
 
 export interface ClientOptions {
     // Defaults to the global fetch. Pass another one in tests.
     readonly fetch?: Fetcher
     readonly timeoutMs?: number
+    // Adds the session to each request. Without it no request carries credentials.
+    readonly auth?: Auth
 }
 
 const DEFAULT_TIMEOUT_MS = 15_000
@@ -38,20 +42,6 @@ const guard = <T>(kind: ErrorKind, step: () => T): T => {
         return step()
     } catch (error) {
         throw error instanceof MappingError ? failure(kind, error.message) : error
-    }
-}
-
-// Turns a Failure into the error of a Result. Any other error is a bug, not an API problem,
-// so it is not hidden.
-const toResult = async <T>(work: () => Promise<T>): Promise<Result<T>> => {
-    try {
-        return { ok: true, value: await work() }
-    } catch (error) {
-        if (error instanceof Failure) {
-            return { ok: false, error: error.error }
-        }
-
-        throw error
     }
 }
 
@@ -89,7 +79,13 @@ export const createClient = (config: MonkeyConfig, options: ClientOptions = {}):
             ...(call.extraQuery === undefined ? {} : { extraQuery: call.extraQuery }),
             ...(call.pageUrl === undefined ? {} : { pageUrl: call.pageUrl }),
         }))
-        const response = await send(fetcher, request, { timeoutMs, ...(call.signal === undefined ? {} : { signal: call.signal }) })
+        const prepared = orFail(options.auth === undefined ? { request } : options.auth.prepare(request),
+            () => failure('unauthenticated', 'Sign in to use this API'))
+        const response = await send(fetcher, prepared.request, {
+            timeoutMs,
+            ...(call.signal === undefined ? {} : { signal: call.signal }),
+            ...(prepared.credentials === undefined ? {} : { credentials: prepared.credentials }),
+        })
 
         if (!response.ok) {
             const { message, fieldErrors } = readError(response.status, response.body, errorsOf(config))

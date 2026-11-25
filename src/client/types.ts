@@ -9,7 +9,8 @@ import type { ApiError, Entry, PageState } from '../mapping/main.ts'
 //   request           the config and the values could not make a request
 //   invalid-response  the API answered with data that the config does not describe
 //   unsupported       the collection does not have this operation
-export type ErrorKind = 'http' | 'network' | 'timeout' | 'aborted' | 'request' | 'invalid-response' | 'unsupported'
+//   unauthenticated   the API needs a sign-in and there is no session, so nothing was sent
+export type ErrorKind = 'http' | 'network' | 'timeout' | 'aborted' | 'request' | 'invalid-response' | 'unsupported' | 'unauthenticated'
 
 // The one shape of every error. Status is 0 when there was no HTTP answer.
 export interface ClientError extends ApiError {
