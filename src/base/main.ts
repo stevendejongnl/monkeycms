@@ -1,3 +1,4 @@
-export { createSignal, createLocalStorageSignal } from './signals/signals.ts'
+export { createSignal, createLocalStorageSignal, computed, effect } from './signals/signals.ts'
+export type { Getter, Setter } from './signals/signals.ts'
 
 export { MonkeySetUp } from './set-up/set-up.ts'

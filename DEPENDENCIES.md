@@ -18,7 +18,8 @@ MonkeyCMS uses as few dependencies as possible, and keeps all of them on the lat
 | Package | Reason |
 |---------|--------|
 | `lit` | Small and stable. It gives templating and reactive properties, so we do not write and test our own rendering code. |
-| `@preact/signals-core` | Temporary. MONKY-9 replaces it with a small signal module in this repository. |
+
+Signals are not a dependency. `src/base/signals/signals.ts` has a small signal, computed and effect. Replace it with the TC39 Signals proposal when browsers ship it.
 
 The decision to keep Lit is provisional. To remove it, replace it with plain custom elements and a small base class in this repository.
 
