@@ -56,8 +56,13 @@ export interface EntryResponseMapping {
 
 export interface ErrorMapping {
     messagePath?: string
-    // Path of an object that maps field names to a message or a list of messages.
+    // Path of the field errors. It is an object that maps field names to a message or a list
+    // of messages, or an array of errors when the two paths below are set.
     fieldErrorsPath?: string
+    // For an array of errors, the paths inside each error. The field name is the last part of
+    // the value at fieldNamePath, so a JSON Pointer like /data/attributes/title gives "title".
+    fieldNamePath?: string
+    fieldMessagePath?: string
 }
 
 export type Pagination =

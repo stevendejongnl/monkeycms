@@ -215,7 +215,16 @@
           "$ref": "#/$defs/path"
         },
         "fieldErrorsPath": {
-          "$ref": "#/$defs/path"
+          "$ref": "#/$defs/path",
+          "description": "An object that maps field names to messages, or an array of errors when fieldNamePath is set."
+        },
+        "fieldNamePath": {
+          "$ref": "#/$defs/path",
+          "description": "For an array of errors: the path inside each error to the field name. A JSON Pointer such as /data/attributes/title gives title."
+        },
+        "fieldMessagePath": {
+          "$ref": "#/$defs/path",
+          "description": "For an array of errors: the path inside each error to the message. Without it the error itself is the message."
         }
       }
     },
