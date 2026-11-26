@@ -192,11 +192,7 @@ export class MonkeyRichtextField extends MonkeyField<string> {
                         @click=${() => {
                             const editor = this.renderRoot.querySelector<HTMLElement>('#control')
 
-                            // Focusing an editor that has the focus can move the selection in WebKit.
-                            if (editor !== null && this.renderRoot.querySelector(':focus') !== editor) {
-                                editor.focus()
-                            }
-
+                            editor?.focus()
                             run()
                             editor?.dispatchEvent(new Event('input', { bubbles: true }))
                         }}>

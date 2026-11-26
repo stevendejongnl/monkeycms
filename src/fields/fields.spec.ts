@@ -256,7 +256,8 @@ test.describe('monkey-richtext-field', () => {
     test('should make the selected text bold, and send the HTML', async ({ page }) => {
         await draw(page, '<p>Hello world</p>')
         await editor(page).click()
-        await editor(page).locator('p').selectText()
+        // selectText cannot select inside a shadow root in WebKit, so select with the keyboard.
+        await page.keyboard.press('ControlOrMeta+a')
         await page.getByRole('button', { name: 'Bold' }).click()
 
         await expect(editor(page).locator('b, strong')).toHaveText('Hello world')
