@@ -59,7 +59,7 @@ export const buttonStyles = css`
         cursor: not-allowed;
     }
 
-    button[type='submit'], .primary {
+    button[type='submit'], .button.primary {
         color: var(--monkey-accent-contrast-color);
         background: var(--monkey-accent-color);
         border-color: transparent;

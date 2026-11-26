@@ -18,7 +18,8 @@
     "test": "npm run test:unit && npm run test:components",
     "test:unit": "node --test \"src/**/*.test.ts\"",
     "test:components": "playwright test",
-    "serve": "npm run build && node scripts/static-server.mjs"
+    "serve": "npm run build && node scripts/static-server.mjs",
+    "screenshots": "node scripts/screenshots.mjs . docs/screenshots/latest"
   },
   "keywords": [],
   "author": "Steven de Jong <steven@steven-dejong.nl>",
