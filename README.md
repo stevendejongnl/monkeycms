@@ -12,7 +12,7 @@ The same MonkeyCMS build can work with many different APIs. Only the config chan
 
 ## Quick start
 
-MonkeyCMS is not on npm yet, so run it from a clone. You need Node 26 or newer.
+The `monkeycms` package on npm (0.0.1, from 2024) is an old placeholder. This rewrite is not released yet (see the Roadmap), so run it from a clone. You need Node 26 or newer.
 
 ```
 git clone https://github.com/stevendejongnl/monkeycms
