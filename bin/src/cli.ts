@@ -4,6 +4,7 @@ import { styleText } from 'node:util'
 import { help, parse, version } from './helper.ts'
 import { serve } from './commands/serve.ts'
 import { build } from './commands/build.ts'
+import { init } from './commands/init.ts'
 
 let parsed: ReturnType<typeof parse>
 
@@ -35,14 +36,20 @@ if (values.version) {
     case 'b':
       build()
       break
-    case 'test':
-    case 't':
-      console.log(styleText('green', 'Testing project...'))
+    case 'init':
+    case 'i': {
+      const { written, blocked } = await init(positionals[1] ?? '.')
+
+      if (blocked.length > 0) {
+        console.error(styleText('red', `Nothing written. These files exist already: ${blocked.join(', ')}`))
+        process.exitCode = 1
+      } else {
+        console.log(styleText('green', `Written: ${written.join(', ')}`))
+        console.log('Next: monkeycms serve')
+      }
+
       break
-    case 'publish':
-    case 'p':
-      console.log(styleText('green', 'Publishing project...'))
-      break
+    }
     default:
       console.log(styleText('red', 'Command not found'))
       console.log(help)

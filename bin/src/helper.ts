@@ -4,13 +4,13 @@ import { parseArgs } from 'node:util'
 export const help = `
     Usage
     $ monkeycms <command>
+    $ monkeycms init [folder]
 
     Commands
     help    [h]   Display help
     serve   [s]   Serve the public and dist folders
     build   [b]   Build the project
-    test    [t]   Test the project
-    publish [p]   Publish the project
+    init    [i]   Write a sample index.html and mapping config
 
     Options
     --port,    -p   Port for serve (default 8080)
