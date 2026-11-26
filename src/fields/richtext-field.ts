@@ -1,4 +1,4 @@
-import { css, html } from 'lit'
+import { css, html, svg } from 'lit'
 import { customElement, property } from 'lit/decorators.js'
 import { MonkeyField } from './field.ts'
 import type { ControlAttributes } from './field.ts'
@@ -9,6 +9,8 @@ import type { RichtextFormat } from '../config/main.ts'
 
 interface Command {
     readonly label: string
+    // The path of the icon in a 24 by 24 box.
+    readonly icon: string
     readonly run: () => void
 }
 
@@ -17,14 +19,12 @@ const format = (command: string, value?: string): void => {
 }
 
 const COMMANDS: readonly Command[] = [
-    { label: 'Heading', run: () => format('formatBlock', 'h2') },
-    { label: 'Subheading', run: () => format('formatBlock', 'h3') },
-    { label: 'Paragraph', run: () => format('formatBlock', 'p') },
-    { label: 'Bold', run: () => format('bold') },
-    { label: 'Italic', run: () => format('italic') },
-    { label: 'Bullet list', run: () => format('insertUnorderedList') },
-    { label: 'Numbered list', run: () => format('insertOrderedList') },
-    { label: 'Quote', run: () => format('formatBlock', 'blockquote') },
+    { label: 'Heading', icon: 'M6 5v14M18 5v14M6 12h12', run: () => format('formatBlock', 'h2') },
+    { label: 'Bold', icon: 'M7 5h6a3.5 3.5 0 0 1 0 7H7zM7 12h7a3.5 3.5 0 0 1 0 7H7z', run: () => format('bold') },
+    { label: 'Italic', icon: 'M10 5h8M6 19h8M14 5l-4 14', run: () => format('italic') },
+    { label: 'Bulleted list', icon: 'M9 6h11M9 12h11M9 18h11M4.5 6h.01M4.5 12h.01M4.5 18h.01', run: () => format('insertUnorderedList') },
+    { label: 'Quote', icon: 'M5 17c0-4 1-7 4-9M13 17c0-4 1-7 4-9', run: () => format('formatBlock', 'blockquote') },
+    { label: 'Paragraph', icon: 'M8 5h8M8 12h8M8 19h5', run: () => format('formatBlock', 'p') },
 ]
 
 // A text with headings, bold, italic, lists and quotes, made with a small toolbar on a
@@ -34,47 +34,67 @@ const COMMANDS: readonly Command[] = [
 @customElement('monkey-richtext-field')
 export class MonkeyRichtextField extends MonkeyField<string> {
     static override styles = [...MonkeyField.styles, css`
+        .frame {
+            overflow: hidden;
+            background: var(--monkey-background-color);
+            border: 1px solid var(--monkey-control-border-color);
+            border-radius: calc(var(--monkey-radius) + 4px);
+        }
+
+        .frame:focus-within {
+            outline: 3px solid var(--monkey-accent-color);
+            outline-offset: 2px;
+        }
+
+        .frame.invalid {
+            border: 2px solid var(--monkey-error-color);
+        }
+
         .toolbar {
-            display: flex;
-            flex-wrap: wrap;
-            gap: 0.25rem;
+            display: grid;
+            grid-auto-flow: column;
+            justify-content: start;
+            align-items: center;
+            gap: 2px;
+            padding: 6px;
+            background: var(--monkey-surface-color);
+            border-block-end: 1px solid var(--monkey-border-color);
         }
 
         .toolbar button {
-            min-block-size: 2.75rem;
-            padding: 0 0.875rem;
-            font: inherit;
-            font-size: 0.875rem;
-            font-weight: 600;
+            display: grid;
+            place-items: center;
+            inline-size: 2.5rem;
+            block-size: 2.5rem;
+            padding: 0;
             color: var(--monkey-color);
             background: transparent;
-            border: 1px solid var(--monkey-control-border-color);
+            border: 0;
             border-radius: var(--monkey-radius);
             cursor: pointer;
         }
 
+        .toolbar button:hover:not(:disabled) {
+            background: color-mix(in oklab, var(--monkey-accent-color) 14%, var(--monkey-surface-color));
+        }
+
+        .toolbar button:focus-visible {
+            outline: 3px solid var(--monkey-accent-color);
+            outline-offset: -3px;
+        }
+
         .toolbar button:disabled {
-            opacity: 0.6;
+            opacity: 0.5;
             cursor: not-allowed;
         }
 
         .editor {
             box-sizing: border-box;
-            min-block-size: 10rem;
-            padding: var(--monkey-padding);
-            color: var(--monkey-color);
-            background: var(--monkey-surface-color);
-            border: 1px solid var(--monkey-control-border-color);
-            border-radius: var(--monkey-radius);
-        }
-
-        .editor:focus-visible {
-            outline: 3px solid var(--monkey-accent-color);
-            outline-offset: 2px;
-        }
-
-        .editor[aria-invalid='true'] {
-            border-color: var(--monkey-error-color);
+            min-block-size: 16rem;
+            padding: 1.25rem 1.5rem;
+            font-size: 1.0625rem;
+            line-height: 1.7;
+            outline: 0;
         }
 
         .editor > :first-child {
@@ -85,11 +105,37 @@ export class MonkeyRichtextField extends MonkeyField<string> {
             margin-block-end: 0;
         }
 
+        .editor h2 {
+            margin: 1.4em 0 0.4em;
+            font-size: 1.5rem;
+            line-height: 1.25;
+            letter-spacing: -0.01em;
+        }
+
+        .editor h3 {
+            margin: 1.2em 0 0.4em;
+            font-size: 1.25rem;
+            line-height: 1.3;
+        }
+
+        .editor p {
+            margin: 0.8em 0;
+        }
+
+        .editor ul, .editor ol {
+            margin: 0.8em 0;
+            padding-inline-start: 1.4em;
+        }
+
+        .editor li {
+            margin: 0.25em 0;
+        }
+
         .editor blockquote {
-            margin-inline: 0;
-            padding-inline-start: 1rem;
-            color: var(--monkey-muted-color);
-            border-inline-start: 4px solid var(--monkey-border-color);
+            margin: 1em 0;
+            padding: 0.625rem 1.125rem;
+            background: color-mix(in oklab, var(--monkey-accent-color) 9%, var(--monkey-surface-color));
+            border-radius: var(--monkey-radius);
         }
     `]
 
@@ -135,20 +181,23 @@ export class MonkeyRichtextField extends MonkeyField<string> {
 
     private toolbar(editable: boolean): unknown {
         return html`
-            <div class="toolbar" role="toolbar" aria-label="Formatting">
-                ${COMMANDS.map(({ label, run }) => html`
+            <div class="toolbar" role="toolbar" aria-label="Formatting" aria-controls="control">
+                ${COMMANDS.map(({ label, icon, run }) => html`
                     <button
                         type="button"
+                        title=${label}
+                        aria-label=${label}
                         ?disabled=${!editable}
                         @mousedown=${(event: Event) => event.preventDefault()}
-                        @click=${(event: Event) => {
+                        @click=${() => {
                             const editor = this.renderRoot.querySelector<HTMLElement>('#control')
 
                             editor?.focus()
                             run()
                             editor?.dispatchEvent(new Event('input', { bubbles: true }))
-                            event.preventDefault()
-                        }}>${label}</button>`)}
+                        }}>
+                        <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true">${svg`<path d=${icon}></path>`}</svg>
+                    </button>`)}
             </div>`
     }
 
@@ -156,20 +205,22 @@ export class MonkeyRichtextField extends MonkeyField<string> {
         const editable = !this.disabled && !this.readonly
 
         return html`
-            ${this.toolbar(editable)}
-            <div
-                id=${id}
-                class="editor"
-                role="textbox"
-                aria-multiline="true"
-                aria-label=${this.label === '' ? this.name : this.label}
-                aria-required=${this.required ? 'true' : 'false'}
-                aria-readonly=${this.readonly ? 'true' : 'false'}
-                aria-disabled=${this.disabled ? 'true' : 'false'}
-                aria-invalid=${invalid ? 'true' : 'false'}
-                aria-describedby=${describedBy}
-                contenteditable=${editable ? 'true' : 'false'}
-                tabindex="0"
-                @input=${(event: Event) => this.input(event)}></div>`
+            <div class=${invalid ? 'frame invalid' : 'frame'}>
+                ${this.toolbar(editable)}
+                <div
+                    id=${id}
+                    class="editor"
+                    role="textbox"
+                    aria-multiline="true"
+                    aria-label=${this.label === '' ? this.name : this.label}
+                    aria-required=${this.required ? 'true' : 'false'}
+                    aria-readonly=${this.readonly ? 'true' : 'false'}
+                    aria-disabled=${this.disabled ? 'true' : 'false'}
+                    aria-invalid=${invalid ? 'true' : 'false'}
+                    aria-describedby=${describedBy}
+                    contenteditable=${editable ? 'true' : 'false'}
+                    tabindex="0"
+                    @input=${(event: Event) => this.input(event)}></div>
+            </div>`
     }
 }
