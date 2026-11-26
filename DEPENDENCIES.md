@@ -45,7 +45,7 @@ There is no ESLint. `typescript-eslint` does not support TypeScript 7 yet (its p
 | `meow` | `node:util` `parseArgs` |
 | `chalk` | `node:util` `styleText` |
 | `rimraf` | `node:fs` `rm` |
-| `http-server` | `scripts/static-server.mjs`, a small static server on `node:http` |
+| `http-server` | `monkeycms serve`, a small static server on `node:http` (`bin/src/commands/serve.ts`) |
 | `sass` | native CSS |
 | `concurrently` | not needed |
 | rollup and its plugins, `ts-patch`, `ts-node`, `typescript-transform-paths`, `@web/test-runner` and its plugins, `@open-wc/testing`, `stylelint` | `esbuild`, `tsc`, `node:test` and `@playwright/test` |
