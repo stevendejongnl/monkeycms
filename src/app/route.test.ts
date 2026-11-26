@@ -8,6 +8,7 @@ describe('parseRoute', () => {
         assert.deepEqual(parseRoute(''), { view: 'home' })
         assert.deepEqual(parseRoute('#/'), { view: 'home' })
         assert.deepEqual(parseRoute('#/posts'), { view: 'list', collection: 'posts' })
+        assert.deepEqual(parseRoute('#/settings'), { view: 'settings' })
         assert.deepEqual(parseRoute('#/posts/new'), { view: 'new', collection: 'posts' })
         assert.deepEqual(parseRoute('#/posts/12'), { view: 'edit', collection: 'posts', id: '12' })
     })
@@ -27,6 +28,7 @@ describe('hrefOf', () => {
     it('should give the hash of each view, and parseRoute reads it back', () => {
         const routes = [
             { view: 'home' },
+            { view: 'settings' },
             { view: 'list', collection: 'posts' },
             { view: 'new', collection: 'posts' },
             { view: 'edit', collection: 'posts', id: 'a/b c?' },

@@ -5,6 +5,9 @@ import { hrefOf } from '../route.ts'
 
 export const SIGN_OUT = 'monkey-sign-out'
 
+// The "active" value of the settings screen. No collection can have this name.
+export const SETTINGS = 'settings'
+
 const FOLDED_KEY = 'monkeycms:sidebar-folded'
 
 // The folded state is a convenience, so a browser that blocks storage starts unfolded.
@@ -216,6 +219,9 @@ export class MonkeySidebar extends LitElement {
                     <ul>${this.items.map((item) => this.item(item))}</ul>
                 </nav>
                 <footer>
+                    <a href=${hrefOf({ view: 'settings' })} aria-current=${this.active === SETTINGS ? 'page' : nothing} title=${this.folded ? 'Settings' : nothing}>
+                        <span class="icon" aria-hidden="true">⚙</span><span class="text">Settings</span>
+                    </a>
                     ${this.canSignOut ? html`
                         <p class="who" role="status">Signed in</p>
                         <button type="button" title=${this.folded ? 'Sign out' : nothing} @click=${() => this.dispatchEvent(new CustomEvent(SIGN_OUT, { bubbles: true, composed: true }))}>

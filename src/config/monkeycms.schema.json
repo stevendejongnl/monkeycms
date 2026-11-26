@@ -32,6 +32,9 @@
     "errors": {
       "$ref": "#/$defs/errors"
     },
+    "theme": {
+      "$ref": "#/$defs/theme"
+    },
     "collections": {
       "type": "object",
       "minProperties": 1,
@@ -206,6 +209,55 @@
           }
         }
       ]
+    },
+    "theme": {
+      "type": "object",
+      "additionalProperties": false,
+      "description": "The look of the app. The app turns it into the --monkey-* CSS tokens. A preset gives the values that are not set.",
+      "properties": {
+        "preset": {
+          "enum": [
+            "indigo",
+            "teal",
+            "rose",
+            "amber",
+            "slate",
+            "forest"
+          ]
+        },
+        "mode": {
+          "enum": [
+            "system",
+            "light",
+            "dark"
+          ]
+        },
+        "accent": {
+          "type": "string",
+          "pattern": "^#[0-9a-fA-F]{6}$"
+        },
+        "radius": {
+          "enum": [
+            "sharp",
+            "soft",
+            "round"
+          ]
+        },
+        "density": {
+          "enum": [
+            "compact",
+            "comfortable",
+            "spacious"
+          ]
+        },
+        "font": {
+          "enum": [
+            "system",
+            "serif",
+            "mono"
+          ]
+        }
+      }
     },
     "errors": {
       "type": "object",

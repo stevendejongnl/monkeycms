@@ -143,6 +143,25 @@ export interface SectionConfig {
     readonly fields: readonly string[]
 }
 
+export type ThemeMode = 'system' | 'light' | 'dark'
+export type ThemeRadius = 'sharp' | 'soft' | 'round'
+export type ThemeDensity = 'compact' | 'comfortable' | 'spacious'
+export type ThemeFont = 'system' | 'serif' | 'mono'
+export type ThemePreset = 'indigo' | 'teal' | 'rose' | 'amber' | 'slate' | 'forest'
+
+// The look of the app, as data. The app turns it into the --monkey-* tokens. A preset gives the
+// values that are not set here, and the defaults are those of the indigo preset.
+export interface ThemeConfig {
+    readonly preset?: ThemePreset
+    // system follows the colour scheme of the device.
+    readonly mode?: ThemeMode
+    // A colour as #rrggbb.
+    readonly accent?: string
+    readonly radius?: ThemeRadius
+    readonly density?: ThemeDensity
+    readonly font?: ThemeFont
+}
+
 export interface CollectionConfig {
     readonly label?: string
     // Path of the id in one API item. Defaults to "id".
@@ -167,5 +186,6 @@ export interface MonkeyConfig {
     // Used by every list that does not set its own.
     readonly pagination?: Pagination
     readonly errors?: ErrorMapping
+    readonly theme?: ThemeConfig
     readonly collections: Readonly<Record<string, CollectionConfig>>
 }

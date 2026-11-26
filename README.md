@@ -222,6 +222,25 @@ Where the session is kept (`persist`):
 
 A password is only used for the sign-in request. MonkeyCMS does not keep it. For `login`, a token that has an expiry is dropped on the client when the time is up. With cookie sessions the browser keeps the cookie, so the API must set the correct `SameSite` and CORS headers (`Access-Control-Allow-Credentials`).
 
+### Theme in the config
+
+The config can have a `theme` key. It is data only, and the app turns it into the tokens below. All keys are optional.
+
+| Key | Values |
+|-----|--------|
+| `preset` | `indigo` (default), `teal`, `rose`, `amber`, `slate`, `forest`. A preset gives the values that you do not set. |
+| `mode` | `system` (default), `light`, `dark` |
+| `accent` | A colour as `#rrggbb` |
+| `radius` | `sharp`, `soft`, `round` |
+| `density` | `compact`, `comfortable`, `spacious` |
+| `font` | `system`, `serif`, `mono` |
+
+```json
+{ "theme": { "preset": "teal", "mode": "dark", "radius": "round" } }
+```
+
+The sidebar has a Settings link (`#/settings`), so a collection cannot be called `settings`. On that screen the person picks a preset, or sets each value, and the whole app changes at once. The Code tab shows the choice as a `theme` key and as CSS. The choice is kept in the browser and wins over the config. Reset goes back to the config.
+
 ### Theming
 
 Every colour, size and font is a CSS custom property, so a theme is a few lines of CSS. Light is the default, and the dark values apply when the system asks for dark. Set a token on `:root`, or on the `monkey-app` element, to change it:

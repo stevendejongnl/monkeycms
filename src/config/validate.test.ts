@@ -176,6 +176,20 @@ describe('validateConfig', () => {
         assert.equal(issuesOf(changed((c) => { c.collections.posts.sections = [{ title: '', fields: ['title'] }] })).length, 1)
     })
 
+    it('should accept a theme, and refuse values that are not on the list', () => {
+        assert.deepEqual(issuesOf(changed((c) => { c.theme = { preset: 'teal', mode: 'dark', accent: '#0f766e', radius: 'round', density: 'compact', font: 'serif' } })), [])
+        assert.equal(issuesOf(changed((c) => { c.theme = { accent: 'red' } })).length, 1)
+        assert.equal(issuesOf(changed((c) => { c.theme = { font: 'Comic Sans' } })).length, 1)
+        assert.equal(issuesOf(changed((c) => { c.theme = { preset: 'neon' } })).length, 1)
+        assert.equal(issuesOf(changed((c) => { c.theme = { color: '#000000' } })).length, 1)
+    })
+
+    it('should not allow a collection called settings', () => {
+        assert.deepEqual(issuesOf(changed((c) => { c.collections.settings = c.collections.posts })), [
+            'collections.settings|is a reserved name, because #/settings is the settings screen',
+        ])
+    })
+
     it('should accept a search parameter and refuse a bad one', () => {
         assert.deepEqual(issuesOf(changed((c) => { c.collections.posts.list.searchParam = 'q' })), [])
         assert.deepEqual(issuesOf(changed((c) => { c.collections.posts.list.searchParam = 'filter[title]' })), [])

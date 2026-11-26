@@ -5,10 +5,13 @@ import { getAuth } from '../auth/main.ts'
 import { effect } from '../base/signals/signals.ts'
 import { linkStyles } from '../base/styles.ts'
 import { getConfig } from '../config/main.ts'
+import { getChosenTheme } from '../theme/store.ts'
+import { applyTheme } from '../theme/theme.ts'
 import './collection-list/collection-list.ts'
 import { getCounts } from './counts.ts'
 import './sidebar/sidebar.ts'
-import { SIGN_OUT } from './sidebar/sidebar.ts'
+import { SETTINGS, SIGN_OUT } from './sidebar/sidebar.ts'
+import './settings/settings.ts'
 import './entry-editor/entry-editor.ts'
 import type { MonkeyEntryEditor } from './entry-editor/entry-editor.ts'
 import { SAVED } from './entry-editor/entry-editor.ts'
@@ -59,6 +62,8 @@ export class MonkeyApp extends LitElement {
 
     private stop: (() => void) | undefined
 
+    private stopTheme: (() => void) | undefined
+
     private readonly navigated = (): void => {
         const editor = this.renderRoot.querySelector<MonkeyEntryEditor>('monkey-entry-editor')
 
@@ -89,6 +94,8 @@ export class MonkeyApp extends LitElement {
         this.addEventListener(SAVED, this.saved)
         this.addEventListener(SIGN_OUT, this.signedOut)
         // Redraw when the config, the auth or its session changes.
+        // The theme of the person wins over the theme of the config.
+        this.stopTheme = effect(() => applyTheme(getChosenTheme() ?? getConfig()?.theme))
         this.stop = effect(() => {
             getConfig()
             getAuth()?.session()
@@ -103,10 +110,11 @@ export class MonkeyApp extends LitElement {
         this.removeEventListener(SAVED, this.saved)
         this.removeEventListener(SIGN_OUT, this.signedOut)
         this.stop?.()
+        this.stopTheme?.()
     }
 
     private sidebar(config: NonNullable<ReturnType<typeof getConfig>>): unknown {
-        const active = 'collection' in this.route ? this.route.collection : ''
+        const active = this.route.view === 'settings' ? SETTINGS : 'collection' in this.route ? this.route.collection : ''
         const items = Object.entries(config.collections).map(([name, collection]) => ({ name, label: collection.label ?? name }))
 
         return html`
@@ -122,9 +130,11 @@ export class MonkeyApp extends LitElement {
 
         return route.view === 'home'
             ? html`<p>Choose a collection.</p>`
-            : route.view === 'list'
-                ? html`<monkey-collection-list collection=${route.collection}></monkey-collection-list>`
-                : html`<monkey-entry-editor collection=${route.collection} entry-id=${route.view === 'edit' ? route.id : ''}></monkey-entry-editor>`
+            : route.view === 'settings'
+                ? html`<monkey-settings></monkey-settings>`
+                : route.view === 'list'
+                    ? html`<monkey-collection-list collection=${route.collection}></monkey-collection-list>`
+                    : html`<monkey-entry-editor collection=${route.collection} entry-id=${route.view === 'edit' ? route.id : ''}></monkey-entry-editor>`
     }
 
     protected override render(): unknown {
