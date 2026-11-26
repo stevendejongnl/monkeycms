@@ -276,3 +276,11 @@ test.describe('monkey-field', () => {
         await expect(page.locator('monkey-field *')).toHaveCount(0)
     })
 })
+
+for (const tag of ['monkey-text-field', 'monkey-longtext-field']) {
+    test(`${tag} should show an empty control when the value is undefined`, async ({ page }) => {
+        await mount(page, tag, { name: 'title', label: 'Title' }, { value: undefined })
+
+        await expect(page.getByRole('textbox', { name: 'Title' })).toHaveValue('')
+    })
+}

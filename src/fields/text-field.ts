@@ -15,7 +15,7 @@ export class MonkeyTextField extends MonkeyField<string> {
             <input
                 id=${id}
                 type="text"
-                .value=${live(this.value)}
+                .value=${live(this.value ?? '')}
                 ?required=${this.required}
                 ?disabled=${this.disabled}
                 ?readonly=${this.readonly}

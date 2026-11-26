@@ -15,7 +15,7 @@ export class MonkeyLongtextField extends MonkeyField<string> {
             <textarea
                 id=${id}
                 rows="6"
-                .value=${live(this.value)}
+                .value=${live(this.value ?? '')}
                 ?required=${this.required}
                 ?disabled=${this.disabled}
                 ?readonly=${this.readonly}

@@ -79,6 +79,10 @@ const screens = {
     await page.getByRole('button', { name: 'Save' }).click()
     await page.getByRole('alert').first().waitFor()
   },
+  'new-entry': async (page) => {
+    await open(page, '#/posts/new', { type: 'none' })
+    await page.getByLabel('Title').first().waitFor()
+  },
   'sign-in': async (page) => {
     await open(page, '', { type: 'basic' })
     await page.getByLabel('Username').fill('steven')
