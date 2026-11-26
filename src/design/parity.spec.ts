@@ -129,12 +129,47 @@ test.describe('list', () => {
 })
 
 test.describe('sign in', () => {
-    test('the button', async ({ page }) => {
+    const both = async (page: Page, wantedLocator: (page: Page) => Locator, foundLocator: (page: Page) => Locator): Promise<[Measured, Measured]> => {
         await design(page, 'login')
-        const wanted = await measure(page.getByRole('button', { name: 'Sign in' }))
+        const wanted = await measure(wantedLocator(page))
         await app(page, '', { type: 'basic' })
-        const found = await measure(page.getByRole('button', { name: 'Sign in' }))
 
-        expect(found).toMatchObject({ height: wanted.height, borderRadius: wanted.borderRadius, fontWeight: wanted.fontWeight })
+        return [wanted, await measure(foundLocator(page))]
+    }
+
+    test('the button', async ({ page }) => {
+        const [wanted, found] = await both(page, (p) => p.getByRole('button', { name: 'Sign in' }), (p) => p.getByRole('button', { name: 'Sign in' }))
+
+        expect(found).toMatchObject({ height: wanted.height, width: wanted.width, borderRadius: wanted.borderRadius, fontWeight: wanted.fontWeight, fontSize: wanted.fontSize, backgroundColor: wanted.backgroundColor })
+    })
+
+    test('the title', async ({ page }) => {
+        const [wanted, found] = await both(page, (p) => p.getByRole('heading', { name: 'Sign in' }), (p) => p.getByRole('heading', { name: 'Sign in' }))
+
+        expect(found).toMatchObject({ fontSize: wanted.fontSize, fontWeight: wanted.fontWeight })
+    })
+
+    test('the colour side', async ({ page }) => {
+        const [wanted, found] = await both(page, (p) => p.locator('aside'), (p) => p.locator('monkey-login aside'))
+
+        expect(found).toMatchObject({ width: wanted.width, paddingTop: wanted.paddingTop, color: wanted.color })
+    })
+
+    test('the headline of the colour side', async ({ page }) => {
+        const [wanted, found] = await both(page, (p) => p.getByRole('heading', { name: 'Edit content for any API.' }), (p) => p.getByRole('heading', { name: 'Edit content for any API.' }))
+
+        expect(found).toMatchObject({ fontSize: wanted.fontSize, fontWeight: wanted.fontWeight, width: wanted.width })
+    })
+
+    test('a field', async ({ page }) => {
+        const [wanted, found] = await both(page, (p) => p.getByLabel('Username'), (p) => p.getByLabel('Username'))
+
+        expect(found).toMatchObject({ width: wanted.width, height: wanted.height, borderRadius: wanted.borderRadius, paddingLeft: wanted.paddingLeft, backgroundColor: wanted.backgroundColor })
+    })
+
+    test('the field of the password', async ({ page }) => {
+        const [wanted, found] = await both(page, (p) => p.locator('input[type=password]').locator('..'), (p) => p.locator('monkey-login .secret'))
+
+        expect(found).toMatchObject({ width: wanted.width, height: wanted.height, borderRadius: wanted.borderRadius })
     })
 })

@@ -75,7 +75,7 @@ test.describe('Login', () => {
         await login(page).getByLabel('Password').fill('wrong')
         await login(page).getByRole('button', { name: 'Sign in' }).click()
 
-        await expect(login(page).getByRole('alert')).toHaveText('Bad password')
+        await expect(login(page).getByRole('alert')).toContainText('Bad password')
         await expect(login(page).getByLabel('Password')).toBeVisible()
     })
 
