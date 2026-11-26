@@ -57,8 +57,8 @@ describe('validateConfig', () => {
     })
 
     it('should give the path of a bad field', () => {
-        assert.deepEqual(issuesOf(changed((c) => { c.collections.posts.fields.title.type = 'richtext' })), [
-            'collections.posts.fields.title.type|must be one of: "text", "longtext", "number", "boolean", "date", "select"',
+        assert.deepEqual(issuesOf(changed((c) => { c.collections.posts.fields.title.type = 'markdownish' })), [
+            'collections.posts.fields.title.type|must be one of: "text", "longtext", "richtext", "number", "boolean", "date", "select"',
         ])
     })
 
@@ -182,6 +182,14 @@ describe('validateConfig', () => {
         assert.equal(issuesOf(changed((c) => { c.theme = { font: 'Comic Sans' } })).length, 1)
         assert.equal(issuesOf(changed((c) => { c.theme = { preset: 'neon' } })).length, 1)
         assert.equal(issuesOf(changed((c) => { c.theme = { color: '#000000' } })).length, 1)
+    })
+
+    it('should accept a format on a richtext field only', () => {
+        const field = (type: string, format: string) => changed((c) => { c.collections.posts!.fields.body = { type, format } as never })
+
+        assert.deepEqual(issuesOf(field('richtext', 'markdown')), [])
+        assert.deepEqual(issuesOf(field('longtext', 'markdown')), ['collections.posts.fields.body.format|is only allowed for a richtext field'])
+        assert.equal(issuesOf(field('richtext', 'rtf')).length, 1)
     })
 
     it('should not allow a collection called settings', () => {

@@ -14,7 +14,7 @@ const out = resolve(process.argv[3] ?? 'docs/screenshots')
 const port = 4300 + Math.floor(Math.random() * 500)
 const origin = `http://127.0.0.1:${port}`
 
-const config = (auth) => ({
+const config = (auth, body = { type: 'longtext', label: 'Body' }) => ({
   configVersion: 1,
   baseUrl: 'https://api.example.com',
   auth,
@@ -27,7 +27,7 @@ const config = (auth) => ({
         title: { type: 'text', label: 'Title', required: true },
         status: { type: 'select', label: 'Status', options: ['draft', 'published'] },
         readingTime: { type: 'number', label: 'Reading time (minutes)' },
-        body: { type: 'longtext', label: 'Body' },
+        body,
       },
       status: { field: 'status', param: 'status', publish: 'published' },
       sections: [{ title: 'Content', fields: ['title', 'body'] }, { title: 'Publishing', fields: ['status', 'readingTime'] }],
@@ -48,7 +48,7 @@ const posts = [
   { id: 3, title: 'Coffee tasting night', status: 'published', readingTime: 2 },
 ]
 
-const open = async (page, hash, auth) => {
+const open = async (page, hash, auth, body) => {
   await page.route('https://api.example.com/**', (route) => {
     const { pathname } = new URL(route.request().url())
 
@@ -60,7 +60,7 @@ const open = async (page, hash, auth) => {
 
     setUp.setAttribute('config', JSON.stringify(json))
     document.body.append(setUp, document.createElement('monkey-app'))
-  }, config(auth))
+  }, config(auth, body))
   await page.locator('monkey-set-up[config]').getByRole('status').waitFor()
   // The demo page prints the state of the set-up above the app. Leave that out of the pictures.
   await page.addStyleTag({ content: 'monkey-set-up { display: none }' })
@@ -130,6 +130,29 @@ const screens = {
     await page.setViewportSize({ width: 1100, height: 900 })
     await open(page, '#/posts/new', { type: 'none' })
     await page.getByLabel('Title').first().waitFor()
+  },
+  richtext: async (page) => {
+    await page.setViewportSize({ width: 1100, height: 1000 })
+    await open(page, '#/posts/new', { type: 'none' }, { type: 'richtext', label: 'Body', format: 'markdown' })
+    await page.getByLabel('Title').first().fill('A new spring menu')
+
+    const editor = page.getByRole('textbox', { name: 'Body' })
+
+    await editor.click()
+    await page.getByRole('button', { name: 'Heading', exact: true }).click()
+    await page.keyboard.type('Spring is here')
+    await page.keyboard.press('Enter')
+    await page.getByRole('button', { name: 'Paragraph' }).click()
+    await page.getByRole('button', { name: 'Bold' }).click()
+    await page.keyboard.type('Asparagus')
+    await page.getByRole('button', { name: 'Bold' }).click()
+    await page.keyboard.type(' and wild garlic arrive in April.')
+    await page.keyboard.press('Enter')
+    await page.getByRole('button', { name: 'Bullet list' }).click()
+    await page.keyboard.type('Soup of the day')
+    await page.keyboard.press('Enter')
+    await page.keyboard.type('Rhubarb tart')
+    await page.getByLabel('Title').first().click()
   },
   'editor-preview': async (page) => {
     await page.setViewportSize({ width: 1100, height: 800 })

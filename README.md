@@ -150,6 +150,8 @@ The editor has a bar at the bottom with the state (Unsaved changes or No changes
 
 The app has a sidebar in the accent colour, with one item for each collection. An item has an icon column (the first letter of the label, because the config has no icons), the label and the number of entries, once the list of that collection has been loaded. The footer has Sign out (when the API needs a sign-in) and Collapse, which folds the sidebar to a rail of icons. The folded state is kept in the browser. On a narrow screen the sidebar is a row above the page.
 
+A `richtext` field is a text with headings, bold, italic, bullet and numbered lists and quotes, made with a small toolbar. It has no editor library: it is a `contenteditable` element. With `"format": "html"` the value is HTML, and with `"format": "markdown"` it is Markdown. The value has only the tags that the toolbar can make (`p`, `h2`, `h3`, `ul`, `ol`, `li`, `blockquote`, `strong`, `em` and `br`), without attributes. Anything else, such as scripts, links, images and styles, is removed from what comes in and from what the person pastes, and HTML in a Markdown value shows as plain text. A `richtext` field is not a column in the list, and the previews show it as plain text.
+
 The list shows a table or cards, as the person chooses. The choice is kept in the browser for each collection. Where the config has `delete`, or `status.publish` and `update`, each entry has a checkbox, and the selected entries get a bar with Publish and Delete (after a confirmation).
 
 **Endpoint.** `path` is a template under `baseUrl`, and `{id}` is the id of the entry. `method` defaults to GET for `list` and `get`, POST for `create`, PUT for `update` and DELETE for `delete`. `query` and `headers` are added for this endpoint, and the values in `query` can use `{name}` like the path. For `list`: `itemsPath` (where the array is, leave out when the body is the array), `totalPath`, `pagination` and `searchParam` (the query parameter for a search term; without it there is no search box). For `get`, `create` and `update`: `itemPath` (where the entry is in the answer), and `body` for create and update, with `wrap` (the key that holds the entry in the request, for example `data`) and `static` (constants to add, as API path to value, for example `{ "data.type": "posts" }`).
@@ -158,12 +160,13 @@ The list shows a table or cards, as the person chooses. The choice is kept in th
 
 | Key | Meaning |
 |-----|---------|
-| `type` | `text`, `longtext`, `number`, `boolean`, `date` or `select`. |
+| `type` | `text`, `longtext`, `richtext`, `number`, `boolean`, `date` or `select`. |
 | `label` | Defaults to the field name. |
 | `required` | The form refuses an empty value. |
 | `readOnly` | Shown, but not sent on create and update. |
 | `path` | Where the value is in the API item. Default the field name. The same path is used to write the request body. |
 | `options` | The choices of a `select`. |
+| `format` | For a `richtext` field: how the text is stored, `html` (default) or `markdown`. |
 | `transform` | Changes the value between API and form: `"string"`, `"number"`, `"boolean"`, `"date"`, `{ "type": "join", "separator": ", " }` (a list in the API, one text in the form), `{ "type": "split", "separator": ", " }` (the other way) or `{ "type": "default", "value": ... }`. |
 
 **Paths.** Every `...Path` is a dot path (`data.items`, `meta.total`), with list positions as `[0]` or `.0` (`errors[0].detail`). A JSON Pointer (`/data/attributes/title`) also works.

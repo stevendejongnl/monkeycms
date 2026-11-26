@@ -3,7 +3,10 @@ import type { ErrorMapping, Json, Pagination, Transform } from '../mapping/main.
 
 export const CONFIG_VERSION = 1
 
-export type FieldType = 'text' | 'longtext' | 'number' | 'boolean' | 'date' | 'select'
+export type FieldType = 'text' | 'longtext' | 'richtext' | 'number' | 'boolean' | 'date' | 'select'
+
+// How a rich-text field is stored in the API: as HTML, or as Markdown.
+export type RichtextFormat = 'html' | 'markdown'
 
 export type Operation = 'list' | 'get' | 'create' | 'update' | 'delete'
 
@@ -84,6 +87,8 @@ export interface FieldConfig {
     readonly transform?: Transform
     // The choices of a select field.
     readonly options?: readonly string[]
+    // The format of a richtext field. Defaults to html.
+    readonly format?: RichtextFormat
 }
 
 interface EndpointConfig {

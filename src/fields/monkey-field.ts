@@ -9,6 +9,7 @@ import type { FieldConfig } from '../config/main.ts'
 const inputs = {
     text: literal`monkey-text-field`,
     longtext: literal`monkey-longtext-field`,
+    richtext: literal`monkey-richtext-field`,
     number: literal`monkey-number-field`,
     boolean: literal`monkey-boolean-field`,
     date: literal`monkey-date-field`,
@@ -53,6 +54,7 @@ export class MonkeyFieldInput extends LitElement {
                 label=${field.label ?? this.name}
                 .value=${this.value}
                 .options=${field.options ?? []}
+                format=${field.format ?? 'html'}
                 ?required=${field.required ?? false}
                 ?readonly=${field.readOnly ?? false}
                 ?disabled=${this.disabled}

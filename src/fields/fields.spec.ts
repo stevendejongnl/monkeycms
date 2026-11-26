@@ -29,6 +29,7 @@ test.beforeEach(async ({ page }) => {
 const inputs = [
     { tag: 'monkey-text-field', control: 'textbox' },
     { tag: 'monkey-longtext-field', control: 'textbox' },
+    { tag: 'monkey-richtext-field', control: 'textbox' },
     { tag: 'monkey-number-field', control: 'spinbutton' },
     { tag: 'monkey-boolean-field', control: 'checkbox' },
     { tag: 'monkey-date-field', control: undefined },
@@ -221,6 +222,136 @@ test.describe('monkey-select-field', () => {
     })
 })
 
+test.describe('monkey-richtext-field', () => {
+    const editor = (page: Page) => page.getByRole('textbox', { name: 'Body' })
+
+    const draw = (page: Page, value: string, format = 'html') =>
+        mount(page, 'monkey-richtext-field', { name: 'body', label: 'Body', format }, { value })
+
+    // Types a letter at the end of the text, so the field sends its value.
+    const touch = async (page: Page) => {
+        await editor(page).click()
+        await page.keyboard.press('Control+End')
+        await page.keyboard.type('!')
+    }
+
+    test('should show the value as formatted text', async ({ page }) => {
+        await draw(page, '<h2>Title</h2><p>Some <strong>bold</strong> and <em>italic</em> text</p><ul><li>one</li></ul>')
+
+        await expect(editor(page).getByRole('heading', { name: 'Title' })).toBeVisible()
+        await expect(editor(page).locator('strong')).toHaveText('bold')
+        await expect(editor(page).getByRole('listitem')).toHaveText(['one'])
+    })
+
+    test('should have a toolbar with the formats', async ({ page }) => {
+        await draw(page, '')
+
+        await expect(page.getByRole('toolbar', { name: 'Formatting' }).getByRole('button'))
+            .toHaveText(['Heading', 'Subheading', 'Paragraph', 'Bold', 'Italic', 'Bullet list', 'Numbered list', 'Quote'])
+    })
+
+    test('should make the selected text bold, and send the HTML', async ({ page }) => {
+        await draw(page, '<p>Hello world</p>')
+        await editor(page).locator('p').selectText()
+        await page.getByRole('button', { name: 'Bold' }).click()
+
+        await expect(editor(page).locator('b, strong')).toHaveText('Hello world')
+        expect((await changes(page)).at(-1)).toEqual({ name: 'body', value: '<p><strong>Hello world</strong></p>' })
+    })
+
+    test('should make a block a heading, a list or a quote', async ({ page }) => {
+        await draw(page, '<p>One</p><p>Two</p><p>Three</p>')
+        await editor(page).getByText('One').click()
+        await page.getByRole('button', { name: 'Heading', exact: true }).click()
+        await editor(page).getByText('Two').click()
+        await page.getByRole('button', { name: 'Bullet list' }).click()
+        await editor(page).getByText('Three').click()
+        await page.getByRole('button', { name: 'Quote' }).click()
+
+        expect((await changes(page)).at(-1)).toEqual({ name: 'body', value: '<h2>One</h2><ul><li>Two</li></ul><blockquote>Three</blockquote>' })
+    })
+
+    test('should send the typed text in a paragraph', async ({ page }) => {
+        await draw(page, '')
+        await editor(page).click()
+        await page.keyboard.type('Plain text')
+
+        expect((await changes(page)).at(-1)).toEqual({ name: 'body', value: '<p>Plain text</p>' })
+    })
+
+    test('should send an empty string when the text is gone', async ({ page }) => {
+        await draw(page, '<p>x</p>')
+        await editor(page).click()
+        await page.keyboard.press('Control+A')
+        await page.keyboard.press('Delete')
+
+        expect((await changes(page)).at(-1)).toEqual({ name: 'body', value: '' })
+    })
+
+    test('should remove scripts, handlers, attributes and unknown tags from the value', async ({ page }) => {
+        await draw(page, '<p onclick="x()" style="color:red">Hi <a href="javascript:x">link</a><img src=x onerror="window.hacked=1"></p><script>window.hacked=1</script><div><h4>Deep</h4></div><iframe src="x"></iframe>')
+        await touch(page)
+
+        expect((await changes(page)).at(-1)).toEqual({ name: 'body', value: '<p>Hi link</p><h3>Deep!</h3>' })
+        expect(await page.evaluate(() => (window as unknown as { hacked?: number }).hacked)).toBeUndefined()
+        await expect(editor(page).locator('script, img, iframe, a, [onclick], [style]')).toHaveCount(0)
+    })
+
+    test('should keep the text that a pasted block of other tags has', async ({ page }) => {
+        await draw(page, '<div>One<br>Two</div><table><tr><td>Cell</td></tr></table>')
+        await touch(page)
+
+        expect((await changes(page)).at(-1)).toEqual({ name: 'body', value: '<p>One<br>Two</p><p>Cell!</p>' })
+    })
+
+    test('should store Markdown with the format markdown, and show it formatted', async ({ page }) => {
+        await draw(page, '## Title\n\nSome **bold** text\n\n- one\n- two', 'markdown')
+
+        await expect(editor(page).getByRole('heading', { name: 'Title' })).toBeVisible()
+        await expect(editor(page).locator('strong')).toHaveText('bold')
+        await expect(editor(page).getByRole('listitem')).toHaveText(['one', 'two'])
+
+        await touch(page)
+
+        expect((await changes(page)).at(-1)).toEqual({ name: 'body', value: '## Title\n\nSome **bold** text\n\n- one\n- two!' })
+    })
+
+    test('should not run HTML in a Markdown value', async ({ page }) => {
+        await draw(page, '<img src=x onerror="window.hacked=1"> <script>window.hacked=1</script>', 'markdown')
+
+        await expect(editor(page).locator('img, script')).toHaveCount(0)
+        await expect(editor(page)).toContainText('<script>')
+        expect(await page.evaluate(() => (window as unknown as { hacked?: number }).hacked)).toBeUndefined()
+    })
+
+    test('should take a new value from outside, and keep the cursor while the person types', async ({ page }) => {
+        await draw(page, '<p>First</p>')
+        await page.locator('monkey-richtext-field').evaluate((element) => { (element as unknown as { value: string }).value = '<p>Second</p>' })
+
+        await expect(editor(page)).toHaveText('Second')
+
+        await editor(page).click()
+        await page.keyboard.press('Control+End')
+        await page.keyboard.type('abc')
+
+        await expect(editor(page)).toHaveText('Secondabc')
+    })
+
+    test('should not change, and have a disabled toolbar, when it is read-only', async ({ page }) => {
+        await mount(page, 'monkey-richtext-field', { name: 'body', label: 'Body', readonly: '' }, { value: '<p>Fixed</p>' })
+
+        await expect(editor(page)).toHaveAttribute('contenteditable', 'false')
+        await expect(page.getByRole('button', { name: 'Bold' })).toBeDisabled()
+    })
+
+    test('should move the focus to the editor', async ({ page }) => {
+        await draw(page, '')
+        await page.locator('monkey-richtext-field').evaluate((element) => (element as HTMLElement).focus())
+
+        await expect(editor(page)).toBeFocused()
+    })
+})
+
 test.describe('monkey-field', () => {
     const draw = (page: Page, field: object, value?: unknown, attributes: Record<string, string> = {}) =>
         mount(page, 'monkey-field', { name: 'x', ...attributes }, { field, value })
@@ -229,6 +360,7 @@ test.describe('monkey-field', () => {
         const tags: Record<string, string> = {
             text: 'monkey-text-field',
             longtext: 'monkey-longtext-field',
+            richtext: 'monkey-richtext-field',
             number: 'monkey-number-field',
             boolean: 'monkey-boolean-field',
             date: 'monkey-date-field',

@@ -80,6 +80,12 @@ const selectOptions: Rule = (config) =>
                     message: type === 'select' ? 'is required for a select field' : 'is only allowed for a select field',
                 }]))
 
+const richtextFormat: Rule = (config) =>
+    collectionsOf(config).flatMap(([name, collection]) =>
+        Object.entries(collection.fields)
+            .filter(([, { type, format }]) => type !== 'richtext' && format !== undefined)
+            .map(([field]) => ({ path: `collections.${name}.fields.${field}.format`, message: 'is only allowed for a richtext field' })))
+
 // The status field must be a select field, and the value of Publish one of its choices.
 const statusField: Rule = (config) =>
     collectionsOf(config).flatMap(([name, { fields, status }]) => {
@@ -131,7 +137,7 @@ const reservedNames: Rule = (config) =>
         .filter(([name]) => name === 'settings')
         .map(([name]) => ({ path: `collections.${name}`, message: 'is a reserved name, because #/settings is the settings screen' }))
 
-const rules: readonly Rule[] = [baseUrl, pathSyntax, entryPaths, selectOptions, statusField, previewFields, sectionFields, reservedNames]
+const rules: readonly Rule[] = [baseUrl, pathSyntax, entryPaths, selectOptions, richtextFormat, statusField, previewFields, sectionFields, reservedNames]
 
 // Checks the config against the published schema first. The other rules need a config
 // of the right shape, so they run only when the schema check passes.
