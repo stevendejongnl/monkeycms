@@ -1,4 +1,4 @@
-import { LitElement, css, html, nothing } from 'lit'
+import { LitElement, css, html } from 'lit'
 import { customElement, state } from 'lit/decorators.js'
 import '../auth/login/login.ts'
 import { getAuth } from '../auth/main.ts'
@@ -6,6 +6,9 @@ import { effect } from '../base/signals/signals.ts'
 import { linkStyles } from '../base/styles.ts'
 import { getConfig } from '../config/main.ts'
 import './collection-list/collection-list.ts'
+import { getCounts } from './counts.ts'
+import './sidebar/sidebar.ts'
+import { SIGN_OUT } from './sidebar/sidebar.ts'
 import './entry-editor/entry-editor.ts'
 import type { MonkeyEntryEditor } from './entry-editor/entry-editor.ts'
 import { SAVED } from './entry-editor/entry-editor.ts'
@@ -15,50 +18,38 @@ import type { Route } from './route.ts'
 
 const LEAVE_QUESTION = 'You have unsaved changes. Leave without saving?'
 
-// The CMS: a menu of the collections, the sign-in, and the view for the address in the URL
+// The CMS: a sidebar with the collections, the sign-in, and the view for the address in the URL
 // hash (#/posts, #/posts/new, #/posts/12). It asks before it leaves an entry that has unsaved
 // changes, and goes back to the list after a save.
 @customElement('monkey-app')
 export class MonkeyApp extends LitElement {
     static override styles = [linkStyles, css`
         :host {
+            display: block;
+        }
+
+        .shell {
+            display: grid;
+            grid-template-columns: auto minmax(0, 1fr);
+            min-block-size: 100dvh;
+        }
+
+        .page {
             display: grid;
             gap: var(--monkey-gap);
+            align-content: start;
             box-sizing: border-box;
+            inline-size: 100%;
             max-inline-size: 72rem;
             margin-inline: auto;
             padding: var(--monkey-gap) clamp(1rem, 4vw, 3rem);
         }
 
-        nav ul {
-            display: grid;
-            grid-auto-flow: column;
-            justify-content: start;
-            gap: 0.25rem;
-            margin: 0;
-            padding: 0;
-            list-style: none;
-        }
-
-        nav a {
-            display: grid;
-            align-items: center;
-            min-block-size: 2.75rem;
-            padding: 0 1rem;
-            font-weight: 600;
-            color: var(--monkey-muted-color);
-            text-decoration: none;
-            border-radius: 999px;
-        }
-
-        nav a[aria-current='page'] {
-            color: var(--monkey-accent-contrast-color);
-            background: var(--monkey-accent-color);
-        }
-
-        a:focus-visible {
-            outline: 3px solid var(--monkey-link-color);
-            outline-offset: 2px;
+        @media (max-width: 40rem) {
+            .shell {
+                grid-template-columns: minmax(0, 1fr);
+                min-block-size: 0;
+            }
         }
     `]
 
@@ -88,14 +79,20 @@ export class MonkeyApp extends LitElement {
         location.hash = hrefOf({ view: 'list', collection: 'collection' in route ? route.collection : '' })
     }
 
+    private readonly signedOut = (): void => {
+        getAuth()?.signOut()
+    }
+
     override connectedCallback(): void {
         super.connectedCallback()
         window.addEventListener('hashchange', this.navigated)
         this.addEventListener(SAVED, this.saved)
+        this.addEventListener(SIGN_OUT, this.signedOut)
         // Redraw when the config, the auth or its session changes.
         this.stop = effect(() => {
             getConfig()
             getAuth()?.session()
+            getCounts()
             this.requestUpdate()
         })
     }
@@ -104,19 +101,20 @@ export class MonkeyApp extends LitElement {
         super.disconnectedCallback()
         window.removeEventListener('hashchange', this.navigated)
         this.removeEventListener(SAVED, this.saved)
+        this.removeEventListener(SIGN_OUT, this.signedOut)
         this.stop?.()
     }
 
-    private menu(collections: string[]): unknown {
-        const active = 'collection' in this.route ? this.route.collection : undefined
+    private sidebar(config: NonNullable<ReturnType<typeof getConfig>>): unknown {
+        const active = 'collection' in this.route ? this.route.collection : ''
+        const items = Object.entries(config.collections).map(([name, collection]) => ({ name, label: collection.label ?? name }))
 
         return html`
-            <nav aria-label="Collections">
-                <ul>
-                    ${collections.map((name) => html`
-                        <li><a href=${hrefOf({ view: 'list', collection: name })} aria-current=${name === active ? 'page' : nothing}>${getConfig()?.collections[name]?.label ?? name}</a></li>`)}
-                </ul>
-            </nav>`
+            <monkey-sidebar
+                .items=${items}
+                active=${active}
+                .counts=${getCounts()}
+                ?can-sign-out=${(getAuth()?.fields.length ?? 0) > 0}></monkey-sidebar>`
     }
 
     private view(): unknown {
@@ -132,8 +130,14 @@ export class MonkeyApp extends LitElement {
     protected override render(): unknown {
         const config = getConfig()
 
+        if (config === undefined || getAuth()?.isSignedIn() !== true) {
+            return html`<div class="page"><monkey-login></monkey-login></div>`
+        }
+
         return html`
-            <monkey-login></monkey-login>
-            ${config === undefined || getAuth()?.isSignedIn() !== true ? nothing : html`${this.menu(Object.keys(config.collections))}${this.view()}`}`
+            <div class="shell">
+                ${this.sidebar(config)}
+                <div class="page">${this.view()}</div>
+            </div>`
     }
 }
