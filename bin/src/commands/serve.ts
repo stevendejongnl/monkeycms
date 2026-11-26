@@ -3,11 +3,11 @@ import { stat } from 'node:fs/promises'
 import { createServer } from 'node:http'
 import type { RequestListener, Server } from 'node:http'
 import { extname, join, posix, resolve, sep } from 'node:path'
-import { fileURLToPath } from 'node:url'
+import { packageRoot } from '../root.ts'
 
 
 // The built files of MonkeyCMS itself. A project that has no dist folder is served from here.
-const PACKAGE_DIST = resolve(fileURLToPath(new URL('../../../dist', import.meta.url)))
+const PACKAGE_DIST = join(packageRoot(), 'dist')
 
 const TYPES: Record<string, string> = {
     '.html': 'text/html; charset=utf-8',

@@ -5,6 +5,7 @@ import { help, parse, version } from './helper.ts'
 import { serve } from './commands/serve.ts'
 import { build } from './commands/build.ts'
 import { init } from './commands/init.ts'
+import { runCheck } from './commands/run-check.ts'
 
 let parsed: ReturnType<typeof parse>
 
@@ -50,6 +51,10 @@ if (values.version) {
 
       break
     }
+    case 'check':
+    case 'c':
+      process.exitCode = await runCheck(positionals[1] ?? 'public/monkey.config.json', values.probe === true)
+      break
     default:
       console.log(styleText('red', 'Command not found'))
       console.log(help)
