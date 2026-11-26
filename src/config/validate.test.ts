@@ -165,6 +165,17 @@ describe('validateConfig', () => {
         assert.equal(issuesOf(changed((c) => { c.collections.posts.preview = { fields: [] } })).length, 1)
     })
 
+    it('should accept sections of the fields of the collection, and refuse others', () => {
+        assert.deepEqual(issuesOf(changed((c) => { c.collections.posts.sections = [{ title: 'Content', fields: ['title', 'body'] }, { title: 'Publishing', fields: ['status'] }] })), [])
+        assert.deepEqual(issuesOf(changed((c) => { c.collections.posts.sections = [{ title: 'A', fields: ['title', 'nope'] }] })), [
+            'collections.posts.sections[0].fields[1]|must name a field of the collection',
+        ])
+        assert.deepEqual(issuesOf(changed((c) => { c.collections.posts.sections = [{ title: 'A', fields: ['title'] }, { title: 'B', fields: ['title'] }] })), [
+            'collections.posts.sections[1].fields[0]|is already in another section',
+        ])
+        assert.equal(issuesOf(changed((c) => { c.collections.posts.sections = [{ title: '', fields: ['title'] }] })).length, 1)
+    })
+
     it('should accept a search parameter and refuse a bad one', () => {
         assert.deepEqual(issuesOf(changed((c) => { c.collections.posts.list.searchParam = 'q' })), [])
         assert.deepEqual(issuesOf(changed((c) => { c.collections.posts.list.searchParam = 'filter[title]' })), [])

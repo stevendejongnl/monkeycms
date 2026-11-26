@@ -34,7 +34,7 @@ test.describe('demo app', () => {
 
         await page.getByRole('link', { name: 'New' }).click()
         await page.getByRole('button', { name: 'Save' }).click()
-        await expect(page.getByText('This field is required')).toBeVisible()
+        await expect(page.getByText('This field is required', { exact: true })).toBeVisible()
 
         await page.getByLabel('Title').fill(title)
         await page.getByRole('button', { name: 'Save' }).click()

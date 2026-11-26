@@ -138,10 +138,13 @@ A small config. The full list of keys is in `src/config/monkeycms.schema.json`, 
 | `fields` | The fields, by name. |
 | `status` | Optional. Names the select field that holds the status, for the status tabs and the bulk Publish. See below. |
 | `preview` | Optional. `{ "fields": ["title", "body"] }` adds a Preview button to each entry. It opens a side drawer that shows these fields, a long text in full. Escape, the Close button and a click outside close it. |
+| `sections` | Optional. `[{ "title": "Content", "fields": ["title", "body"] }]` groups the fields of the editor. Each section has a heading and an entry in an outline above the form. A field in no section goes in a last section called Other. A field can be in one section only. |
 | `list` | Required. The other four are optional. A screen only offers what you describe: no `create` means no New button, no `delete` means no Delete button. |
 | `get`, `create`, `update`, `delete` | Endpoints. |
 
 **Status.** `status` is `{ "field": "status", "param": "filter[status]", "publish": "published" }`. `field` is a select field of the collection. With `param` (the query parameter of the list endpoint) the list gets one tab for each option of the field, and an All tab. With `publish` (one of the options) and an `update` endpoint, the bulk bar gets a Publish button that sets the field of each selected entry to that value.
+
+The editor has a bar at the bottom with the state (Unsaved changes or No changes), Cancel and Save. After a save that fails the check, the editor lists the problems, and each one is a link that moves the focus to its field. The Preview button swaps the form for the values as they stand now. A click on a value goes back to the form, at that field.
 
 The list shows a table or cards, as the person chooses. The choice is kept in the browser for each collection. Where the config has `delete`, or `status.publish` and `update`, each entry has a checkbox, and the selected entries get a bar with Publish and Delete (after a confirmation).
 

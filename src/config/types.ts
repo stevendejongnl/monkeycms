@@ -136,6 +136,13 @@ export interface PreviewConfig {
     readonly fields: readonly string[]
 }
 
+// A group of fields of the editor, with a title. The editor shows an outline of the sections.
+export interface SectionConfig {
+    readonly title: string
+    // Names of fields of the collection. A field that is in no section goes in a last section called Other.
+    readonly fields: readonly string[]
+}
+
 export interface CollectionConfig {
     readonly label?: string
     // Path of the id in one API item. Defaults to "id".
@@ -143,6 +150,7 @@ export interface CollectionConfig {
     readonly fields: Readonly<Record<string, FieldConfig>>
     readonly status?: StatusConfig
     readonly preview?: PreviewConfig
+    readonly sections?: readonly SectionConfig[]
     readonly list: ListEndpointConfig
     readonly get?: ItemEndpointConfig
     readonly create?: ItemEndpointConfig

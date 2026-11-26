@@ -25,6 +25,7 @@ const config = (auth: object = { type: 'none' }) => ({
             },
             status: { field: 'status', param: 'status', publish: 'published' },
             preview: { fields: ['title', 'status', 'body'] },
+            sections: [{ title: 'Content', fields: ['title', 'body'] }, { title: 'Publishing', fields: ['status'] }],
             list: { path: '/posts', itemsPath: 'data', totalPath: 'total', searchParam: 'q' },
             get: { path: '/posts/{id}', itemPath: 'data' },
             create: { path: '/posts', itemPath: 'data' },
@@ -360,9 +361,70 @@ test.describe('entry editor', () => {
         await open(page, '#/posts/new')
         await app(page).getByRole('button', { name: 'Save' }).click()
 
-        await expect(app(page).getByRole('alert').filter({ hasText: 'This field is required' })).toBeVisible()
+        await expect(app(page).getByText('This field is required', { exact: true })).toBeVisible()
         await expect(app(page).getByLabel('Title')).toHaveAttribute('aria-invalid', 'true')
         expect(requests.filter((request) => request.startsWith('POST'))).toEqual([])
+    })
+
+    test('should list the problems, and move the focus to a field from the list', async ({ page }) => {
+        await serve(page, threePosts())
+        await open(page, '#/posts/new')
+        await app(page).getByRole('button', { name: 'Save' }).click()
+
+        const list = app(page).getByRole('list', { name: 'Fields to fix' })
+
+        await expect(list.getByRole('listitem')).toHaveText(['Title: This field is required'])
+
+        await list.getByRole('button', { name: 'Title' }).click()
+
+        await expect(app(page).getByLabel('Title')).toBeFocused()
+    })
+
+    test('should group the fields in sections, with an outline that jumps to one', async ({ page }) => {
+        await serve(page, threePosts())
+        await open(page, '#/posts/new')
+
+        await expect(app(page).getByRole('heading', { level: 3 })).toHaveText(['Content', 'Publishing'])
+        await expect(app(page).getByRole('navigation', { name: 'Sections' }).getByRole('button')).toHaveText(['Content', 'Publishing'])
+
+        await app(page).getByRole('navigation', { name: 'Sections' }).getByRole('button', { name: 'Publishing' }).click()
+
+        await expect(app(page).getByRole('heading', { name: 'Publishing' })).toBeFocused()
+        expect(page.url()).toMatch(/#\/posts\/new$/)
+    })
+
+    test('should show in the save bar whether there are unsaved changes', async ({ page }) => {
+        await serve(page, threePosts())
+        await open(page, '#/posts/1')
+
+        const bar = app(page).locator('.bar')
+
+        await expect(bar.getByRole('status')).toHaveText('No changes')
+
+        await app(page).getByLabel('Title').fill('Changed')
+
+        await expect(bar.getByRole('status')).toHaveText('Unsaved changes')
+
+        await app(page).getByLabel('Title').fill('First post')
+
+        await expect(bar.getByRole('status')).toHaveText('No changes')
+    })
+
+    test('should swap the form for a preview of the values, and go back to a field', async ({ page }) => {
+        await serve(page, threePosts())
+        await open(page, '#/posts/1')
+        await app(page).getByLabel('Title').fill('A live title')
+        await app(page).getByRole('button', { name: 'Preview', exact: true }).click()
+
+        await expect(app(page).getByLabel('Title')).toHaveCount(0)
+        await expect(app(page).getByRole('button', { name: /A live title/ })).toBeVisible()
+        await expect(app(page).getByRole('button', { name: /long text one/ })).toBeVisible()
+        await expect(app(page).getByRole('navigation', { name: 'Sections' })).toHaveCount(0)
+
+        await app(page).getByRole('button', { name: /long text one/ }).click()
+
+        await expect(app(page).getByLabel('Body')).toBeFocused()
+        await expect(app(page).getByLabel('Title')).toHaveValue('A live title')
     })
 
     test('should clear the error of a field when the person changes it', async ({ page }) => {

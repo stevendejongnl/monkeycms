@@ -107,7 +107,25 @@ const previewFields: Rule = (config) =>
             .filter(({ field }) => fields[field] === undefined)
             .map(({ index }) => ({ path: `collections.${name}.preview.fields[${index}]`, message: 'must name a field of the collection' })))
 
-const rules: readonly Rule[] = [baseUrl, pathSyntax, entryPaths, selectOptions, statusField, previewFields]
+// Every field in a section must be a field of the collection, and in one section only.
+const sectionFields: Rule = (config) =>
+    collectionsOf(config).flatMap(([name, { fields, sections }]) => {
+        const seen = new Set<string>()
+
+        return (sections ?? []).flatMap((section, sectionIndex) =>
+            section.fields.flatMap((field, index) => {
+                const path = `collections.${name}.sections[${sectionIndex}].fields[${index}]`
+                const issue = fields[field] === undefined
+                    ? [{ path, message: 'must name a field of the collection' }]
+                    : seen.has(field) ? [{ path, message: 'is already in another section' }] : []
+
+                seen.add(field)
+
+                return issue
+            }))
+    })
+
+const rules: readonly Rule[] = [baseUrl, pathSyntax, entryPaths, selectOptions, statusField, previewFields, sectionFields]
 
 // Checks the config against the published schema first. The other rules need a config
 // of the right shape, so they run only when the schema check passes.
