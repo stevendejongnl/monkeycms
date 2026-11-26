@@ -70,7 +70,7 @@ The config format is described by `src/config/monkeycms.schema.json`.
 
 A mock API is one function from request to response (`examples/mock/mock.ts`), so it runs in a test through a fake fetch and can run behind a real server.
 
-JSON:API reports an error per field as an array with a `source.pointer`. The mapping cannot read that yet, so that example shows the message of the first error only.
+JSON:API reports an error per field as an array with a `source.pointer`. The example reads it with `fieldErrorsPath: "errors"`, `fieldNamePath: "source.pointer"` and `fieldMessagePath: "detail"`: the field name is the last part of the pointer.
 
 ### Authentication
 

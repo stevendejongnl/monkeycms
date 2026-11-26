@@ -22,6 +22,8 @@ const pathsOf = (config: MonkeyConfig): [string, string][] => [
         ['auth.expiresInPath', config.auth?.type === 'login' ? config.auth.expiresInPath : undefined],
         ['errors.messagePath', config.errors?.messagePath],
         ['errors.fieldErrorsPath', config.errors?.fieldErrorsPath],
+        ['errors.fieldNamePath', config.errors?.fieldNamePath],
+        ['errors.fieldMessagePath', config.errors?.fieldMessagePath],
         ['pagination.nextCursorPath', config.pagination?.type === 'cursor' ? config.pagination.nextCursorPath : undefined],
     ] as const,
     ...collectionsOf(config).flatMap(([name, collection]) => [

@@ -3,7 +3,7 @@
   "baseUrl": "https://jsonapi.example.com",
   "auth": { "type": "none" },
   "pagination": { "type": "page", "pageParam": "page[number]", "limitParam": "page[size]", "pageSize": 10 },
-  "errors": { "messagePath": "errors[0].detail" },
+  "errors": { "messagePath": "errors[0].detail", "fieldErrorsPath": "errors", "fieldNamePath": "source.pointer", "fieldMessagePath": "detail" },
   "collections": {
     "posts": {
       "label": "Posts",

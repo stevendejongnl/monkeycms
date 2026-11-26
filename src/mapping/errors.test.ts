@@ -25,4 +25,27 @@ describe('readError', () => {
         assert.deepEqual(readError(400, { errors: ['a'] }, { fieldErrorsPath: 'errors' }).fieldErrors, {})
         assert.deepEqual(readError(400, {}, { fieldErrorsPath: 'errors' }).fieldErrors, {})
     })
+
+    it('should read field errors from an array', () => {
+        const body = { errors: [
+            { detail: 'is blank', source: { pointer: '/data/attributes/title' } },
+            { detail: 'too short', source: { pointer: '/data/attributes/title' } },
+            { detail: 'is taken', source: { pointer: '/data/attributes/slug' } },
+            { detail: 'no pointer' },
+        ] }
+        const mapping = { fieldErrorsPath: 'errors', fieldNamePath: 'source.pointer', fieldMessagePath: 'detail' }
+
+        assert.deepEqual(readError(422, body, mapping).fieldErrors, { title: 'is blank, too short', slug: 'is taken' })
+    })
+
+    it('should name the field by the last part of a dotted path, and skip an error without a text message', () => {
+        const body = { fields: [{ name: 'title', message: 'x' }] }
+
+        assert.deepEqual(readError(422, { errors: [{ field: 'a.b', text: 'bad' }] }, { fieldErrorsPath: 'errors', fieldNamePath: 'field', fieldMessagePath: 'text' }).fieldErrors, { b: 'bad' })
+        assert.deepEqual(readError(422, body, { fieldErrorsPath: 'fields', fieldNamePath: 'name' }).fieldErrors, {})
+    })
+
+    it('should ignore an array of errors without a field name path', () => {
+        assert.deepEqual(readError(422, { errors: [{ detail: 'x' }] }, { fieldErrorsPath: 'errors', fieldMessagePath: 'detail' }).fieldErrors, {})
+    })
 })

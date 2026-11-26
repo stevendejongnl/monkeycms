@@ -27,7 +27,7 @@ interface Example {
 const EXAMPLES: Example[] = [
     { folder: 'rest-array', mock: restArray, textField: 'body', total: false, fieldErrors: true },
     { folder: 'envelope', mock: envelope, textField: 'body', total: true, fieldErrors: true },
-    { folder: 'jsonapi', mock: jsonapi, textField: 'body', total: true, fieldErrors: false },
+    { folder: 'jsonapi', mock: jsonapi, textField: 'body', total: true, fieldErrors: true },
     { folder: 'cursor', mock: cursor, textField: 'body', total: false, fieldErrors: false },
     { folder: 'wordpress', mock: wordpress, textField: 'content', total: false, fieldErrors: true },
 ]
@@ -119,7 +119,7 @@ for (const example of EXAMPLES) {
             const result = await (await load()).create('posts', { title: '' })
 
             assert.ok(!result.ok)
-            assert.match(result.error.message, example.fieldErrors ? /Validation failed|Invalid parameter/ : /Title is required/)
+            assert.match(result.error.message, example.fieldErrors ? /Validation failed|Invalid parameter|Title is required/ : /Title is required/)
             assert.deepEqual(Object.keys(result.error.fieldErrors), example.fieldErrors ? ['title'] : [])
         })
     })
