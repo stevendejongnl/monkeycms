@@ -169,4 +169,6 @@ npm run serve        # build, then serve http://127.0.0.1:8080/public/index.html
 npm run demo         # build, then run the app against a mock API of examples/
 ```
 
+Imports that leave a folder by more than one level are written from the root of `src/`, like `import { getClient } from 'client/main.ts'`, or from the root of the project for `examples/`. `tsconfig.json` has the `paths`, esbuild reads them, and `npm run test:unit` loads `scripts/root-imports.mjs` so that `node --test` resolves them too. There are no aliases.
+
 Run the component tests for one browser with `npx playwright test --project=chromium`. Install the browsers first with `npx playwright install`.

@@ -8,6 +8,7 @@
     "types": ["node"],
     "noEmit": true,
     "resolveJsonModule": true,
+    "paths": { "examples/*": ["./examples/*"], "*": ["./src/*"] },
     "allowImportingTsExtensions": true,
     "experimentalDecorators": true,
     "useDefineForClassFields": false,

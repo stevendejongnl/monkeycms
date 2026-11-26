@@ -1,7 +1,7 @@
 import { LitElement, css, html } from 'lit'
 import { customElement, state } from 'lit/decorators.js'
-import { effect } from '../../base/signals/signals.ts'
-import { alertStyles, buttonStyles, controlStyles } from '../../base/styles.ts'
+import { effect } from 'base/signals/signals.ts'
+import { alertStyles, buttonStyles, controlStyles } from 'base/styles.ts'
 import { getAuth } from '../store.ts'
 import type { Auth, CredentialField } from '../types.ts'
 

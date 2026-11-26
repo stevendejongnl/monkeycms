@@ -1,6 +1,6 @@
 import { createServer } from 'node:http'
 import type { Server } from 'node:http'
-import type { Fetcher } from '../../src/client/transport.ts'
+import type { Fetcher } from 'client/transport.ts'
 
 
 // The part of a request that a mock API looks at.

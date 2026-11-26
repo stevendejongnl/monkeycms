@@ -16,7 +16,7 @@
     "typecheck": "tsc --noEmit && tsc --noEmit -p bin",
     "pretest": "npm run typecheck && npm run build",
     "test": "npm run test:unit && npm run test:components",
-    "test:unit": "node --test \"src/**/*.test.ts\" \"bin/src/**/*.test.ts\" \"examples/**/*.test.ts\"",
+    "test:unit": "node --import ./scripts/root-imports.mjs --test \"src/**/*.test.ts\" \"bin/src/**/*.test.ts\" \"examples/**/*.test.ts\"",
     "test:components": "playwright test",
     "serve": "npm run build && node bin/dist/cli.js serve",
     "screenshots": "node scripts/screenshots.mjs . docs/screenshots/latest",

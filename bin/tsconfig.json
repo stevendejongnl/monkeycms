@@ -12,6 +12,14 @@
     "allowImportingTsExtensions": true,
     "strict": true,
     "skipLibCheck": true,
-    "noEmit": true
+    "noEmit": true,
+    "paths": {
+      "examples/*": [
+        "../examples/*"
+      ],
+      "*": [
+        "../src/*"
+      ]
+    }
   }
 }
