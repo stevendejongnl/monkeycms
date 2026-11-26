@@ -68,6 +68,11 @@ export abstract class MonkeyField<T> extends LitElement {
 
     protected abstract control(attributes: ControlAttributes): TemplateResult
 
+    // Moves the focus to the control, so a link to a field can work.
+    override focus(options?: FocusOptions): void {
+        this.renderRoot.querySelector<HTMLElement>('#control')?.focus(options)
+    }
+
     // Sets the value and tells the page.
     protected emit(value: T): void {
         this.value = value

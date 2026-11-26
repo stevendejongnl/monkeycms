@@ -40,6 +40,10 @@ export class MonkeyFieldInput extends LitElement {
         return this
     }
 
+    override focus(options?: FocusOptions): void {
+        this.firstElementChild instanceof HTMLElement && this.firstElementChild.focus(options)
+    }
+
     protected override render(): unknown {
         const { field } = this
 

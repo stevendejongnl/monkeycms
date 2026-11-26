@@ -30,6 +30,7 @@ const config = (auth) => ({
         body: { type: 'longtext', label: 'Body' },
       },
       status: { field: 'status', param: 'status', publish: 'published' },
+      sections: [{ title: 'Content', fields: ['title', 'body'] }, { title: 'Publishing', fields: ['status', 'readingTime'] }],
       preview: { fields: ['title', 'status', 'readingTime', 'body'] },
       list: { path: '/posts', itemsPath: 'data', totalPath: 'total', searchParam: 'q' },
       get: { path: '/posts/{id}', itemPath: 'data' },
@@ -89,6 +90,8 @@ const screens = {
     await page.getByText('2 selected').waitFor()
   },
   editor: async (page) => {
+    // The save bar sticks to the bottom of the viewport, so make the viewport as tall as the page.
+    await page.setViewportSize({ width: 1100, height: 1250 })
     await open(page, '#/posts/new', { type: 'none' })
     // An untouched text field shows "undefined" in both versions, so type in the fields and
     // empty them again to keep that out of the pictures.
@@ -100,8 +103,18 @@ const screens = {
     await page.getByRole('alert').first().waitFor()
   },
   'new-entry': async (page) => {
+    await page.setViewportSize({ width: 1100, height: 900 })
     await open(page, '#/posts/new', { type: 'none' })
     await page.getByLabel('Title').first().waitFor()
+  },
+  'editor-preview': async (page) => {
+    await page.setViewportSize({ width: 1100, height: 800 })
+    await open(page, '#/posts/new', { type: 'none' })
+    await page.getByLabel('Title').first().fill('A new spring menu')
+    await page.getByLabel('Body').first().fill('Asparagus, wild garlic and rhubarb arrive in April.')
+    await page.getByLabel('Status').first().selectOption('draft')
+    await page.getByRole('button', { name: 'Preview', exact: true }).click()
+    await page.getByRole('button', { name: /A new spring menu/ }).waitFor()
   },
   'sign-in': async (page) => {
     await open(page, '', { type: 'basic' })
