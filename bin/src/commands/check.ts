@@ -1,9 +1,9 @@
 import { readFile } from 'node:fs/promises'
-import { createClient } from '../../../src/client/main.ts'
-import type { ApiClient, ListPage } from '../../../src/client/main.ts'
-import type { Fetcher } from '../../../src/client/transport.ts'
-import { describeIssue, validateConfig } from '../../../src/config/main.ts'
-import type { MonkeyConfig } from '../../../src/config/main.ts'
+import { createClient } from 'client/main.ts'
+import type { ApiClient, ListPage } from 'client/main.ts'
+import type { Fetcher } from 'client/transport.ts'
+import { describeIssue, validateConfig } from 'config/main.ts'
+import type { MonkeyConfig } from 'config/main.ts'
 
 
 // One line of the report. A failed line makes the check fail.

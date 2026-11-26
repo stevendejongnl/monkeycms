@@ -1,11 +1,11 @@
 import { LitElement, html } from 'lit'
 import { customElement, property, state } from 'lit/decorators.js'
-import { createAuth } from '../../auth/auth.ts'
-import { setAuth } from '../../auth/store.ts'
-import { createClient } from '../../client/client.ts'
-import { setClient } from '../../client/store.ts'
-import { describeFailure, loadConfig, setConfig } from '../../config/main.ts'
-import type { LoadFailure, MonkeyConfig } from '../../config/main.ts'
+import { createAuth } from 'auth/auth.ts'
+import { setAuth } from 'auth/store.ts'
+import { createClient } from 'client/client.ts'
+import { setClient } from 'client/store.ts'
+import { describeFailure, loadConfig, setConfig } from 'config/main.ts'
+import type { LoadFailure, MonkeyConfig } from 'config/main.ts'
 
 
 export const CONFIG_READY = 'monkey-config-ready'
