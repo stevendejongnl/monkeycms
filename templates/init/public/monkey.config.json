@@ -1,0 +1,20 @@
+{
+  "configVersion": 1,
+  "baseUrl": "https://jsonplaceholder.typicode.com",
+  "auth": { "type": "none" },
+  "pagination": { "type": "page", "pageParam": "_page", "limitParam": "_limit", "pageSize": 10 },
+  "collections": {
+    "posts": {
+      "label": "Posts",
+      "fields": {
+        "title": { "type": "text", "label": "Title", "required": true },
+        "body": { "type": "longtext", "label": "Body" }
+      },
+      "list": { "path": "/posts" },
+      "get": { "path": "/posts/{id}" },
+      "create": { "path": "/posts" },
+      "update": { "path": "/posts/{id}" },
+      "delete": { "path": "/posts/{id}" }
+    }
+  }
+}

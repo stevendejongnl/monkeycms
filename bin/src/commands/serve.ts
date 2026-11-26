@@ -1,11 +1,13 @@
-import { createReadStream } from 'node:fs'
+import { createReadStream, existsSync } from 'node:fs'
 import { stat } from 'node:fs/promises'
 import { createServer } from 'node:http'
 import type { Server } from 'node:http'
-import { extname, join, normalize, resolve, sep } from 'node:path'
+import { extname, join, posix, resolve, sep } from 'node:path'
+import { fileURLToPath } from 'node:url'
 
 
-export const SERVED_FOLDERS = ['public', 'dist']
+// The built files of MonkeyCMS itself. A project that has no dist folder is served from here.
+const PACKAGE_DIST = resolve(fileURLToPath(new URL('../../../dist', import.meta.url)))
 
 const TYPES: Record<string, string> = {
     '.html': 'text/html; charset=utf-8',
@@ -19,9 +21,12 @@ const TYPES: Record<string, string> = {
 }
 
 // A static file server for a project: it serves the files in the "public" and "dist" folders
-// of root, and nothing else. The address has the folder in it, like /public/index.html.
+// of root, and nothing else. The address has the folder in it, like /public/index.html. When
+// root has no dist folder, dist is the one of the MonkeyCMS package.
 export const createStaticServer = (root: string): Server => {
-    const folders = SERVED_FOLDERS.map((folder) => join(resolve(root), folder) + sep)
+    const base = resolve(root)
+    const dist = existsSync(join(base, 'dist')) ? join(base, 'dist') : PACKAGE_DIST
+    const folders: Record<string, string> = { public: join(base, 'public'), dist }
 
     return createServer(async (request, response) => {
         if (request.method !== 'GET' && request.method !== 'HEAD') {
@@ -30,19 +35,21 @@ export const createStaticServer = (root: string): Server => {
             return
         }
 
-        let file: string
+        let address: string
 
         try {
-            const { pathname } = new URL(request.url ?? '/', 'http://localhost')
-
-            file = join(resolve(root), normalize(decodeURIComponent(pathname)))
+            address = posix.normalize(decodeURIComponent(new URL(request.url ?? '/', 'http://localhost').pathname))
         } catch {
             response.writeHead(400).end('Bad request')
 
             return
         }
 
-        if (!folders.some((folder) => file.startsWith(folder))) {
+        const [, name = '', ...rest] = address.split('/')
+        const folder = Object.hasOwn(folders, name) ? folders[name] : undefined
+        const file = folder === undefined ? undefined : join(folder, ...rest)
+
+        if (folder === undefined || file === undefined || (file !== folder && !file.startsWith(folder + sep))) {
             response.writeHead(403).end('Forbidden')
 
             return
