@@ -612,6 +612,16 @@
         "label": {
           "type": "string"
         },
+        "icon": {
+          "enum": [
+            "document",
+            "window",
+            "user",
+            "tag",
+            "image",
+            "folder"
+          ]
+        },
         "idPath": {
           "$ref": "#/$defs/path"
         },

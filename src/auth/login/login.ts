@@ -35,7 +35,7 @@ export class MonkeyLogin extends LitElement {
 
         aside {
             display: grid;
-            grid-template-rows: auto 1fr auto;
+            grid-template-rows: 1fr auto;
             gap: 1.5rem;
             box-sizing: border-box;
             padding: clamp(1.75rem, 5vw, 4rem);
@@ -46,11 +46,6 @@ export class MonkeyLogin extends LitElement {
         aside monkey-logo {
             --monkey-logo-ink-color: var(--monkey-accent-contrast-color);
             --monkey-logo-accent-color: color-mix(in oklab, var(--monkey-accent-contrast-color) 65%, var(--monkey-accent-color));
-        }
-
-        .brand {
-            block-size: 3rem;
-            justify-self: start;
         }
 
         .hero {
@@ -307,7 +302,6 @@ export class MonkeyLogin extends LitElement {
 
         return html`
             <aside>
-                <monkey-logo class="brand"></monkey-logo>
                 <div class="hero">
                     <span class="badge"><monkey-logo mark></monkey-logo></span>
                     <h2>Edit content for any API.</h2>

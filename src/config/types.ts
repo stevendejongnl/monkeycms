@@ -162,8 +162,14 @@ export interface ThemeConfig {
     readonly font?: ThemeFont
 }
 
+// The icons of the menu. A collection without an icon gets "document".
+export const ICON_NAMES = ['document', 'window', 'user', 'tag', 'image', 'folder'] as const
+
+export type IconName = typeof ICON_NAMES[number]
+
 export interface CollectionConfig {
     readonly label?: string
+    readonly icon?: IconName
     // Path of the id in one API item. Defaults to "id".
     readonly idPath?: string
     readonly fields: Readonly<Record<string, FieldConfig>>

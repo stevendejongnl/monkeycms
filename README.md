@@ -136,6 +136,7 @@ A small config. The full list of keys is in `src/config/monkeycms.schema.json`, 
 | Key | Meaning |
 |-----|---------|
 | `label` | The name in the menu and the title. Defaults to the key. |
+| `icon` | The icon in the menu: `document`, `window`, `user`, `tag`, `image` or `folder`. Defaults to `document`. |
 | `idPath` | Where the id is in one API item. Default `id`. |
 | `fields` | The fields, by name. |
 | `status` | Optional. Names the select field that holds the status, for the status tabs and the bulk Publish. See below. |

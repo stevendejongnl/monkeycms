@@ -1,6 +1,8 @@
 import { LitElement, css, html, nothing } from 'lit'
 import { customElement, property, state } from 'lit/decorators.js'
+import type { IconName } from 'config/main.ts'
 import { hrefOf } from '../route.ts'
+import { icon } from '../icons.ts'
 import '../logo/logo.ts'
 
 
@@ -31,10 +33,11 @@ const saveFolded = (folded: boolean): void => {
 export interface SidebarItem {
     readonly name: string
     readonly label: string
+    readonly icon?: IconName
 }
 
-// The side menu of the CMS, in the accent colour. Each item has a 48px icon column (the first
-// letter of its label, since the config has no icons), the label and, when it is known, the
+// The side menu of the CMS, in the accent colour. Each item has a 48px icon column (the icon
+// of the collection), the label and, when it is known, the
 // number of entries. The footer has Sign out (with "canSignOut") and a button that folds the
 // sidebar to a rail of icons. The folded state is remembered. Sends "monkey-sign-out".
 @customElement('monkey-sidebar')
@@ -123,8 +126,6 @@ export class MonkeySidebar extends LitElement {
         .icon {
             display: grid;
             place-items: center;
-            font-size: 1.125rem;
-            text-transform: uppercase;
         }
 
         .count {
@@ -224,13 +225,13 @@ export class MonkeySidebar extends LitElement {
         saveFolded(this.folded)
     }
 
-    private item({ name, label }: SidebarItem): unknown {
+    private item({ name, label, icon: iconName }: SidebarItem): unknown {
         const count = this.counts[name]
 
         return html`
             <li>
                 <a href=${hrefOf({ view: 'list', collection: name })} aria-current=${name === this.active ? 'page' : nothing} title=${this.folded ? label : nothing}>
-                    <span class="icon" aria-hidden="true">${label.charAt(0)}</span>
+                    <span class="icon" aria-hidden="true">${icon(iconName ?? 'document')}</span>
                     <span class="text">${label}</span>
                     ${count === undefined ? nothing : html`<span class="count">${count}</span>`}
                 </a>
@@ -248,15 +249,15 @@ export class MonkeySidebar extends LitElement {
                 </nav>
                 <footer>
                     <a href=${hrefOf({ view: 'settings' })} aria-current=${this.active === SETTINGS ? 'page' : nothing} title=${this.folded ? 'Settings' : nothing}>
-                        <span class="icon" aria-hidden="true">⚙</span><span class="text">Settings</span>
+                        <span class="icon" aria-hidden="true">${icon('settings')}</span><span class="text">Settings</span>
                     </a>
                     ${this.canSignOut ? html`
                         <p class="who" role="status">Signed in</p>
                         <button type="button" title=${this.folded ? 'Sign out' : nothing} @click=${() => this.dispatchEvent(new CustomEvent(SIGN_OUT, { bubbles: true, composed: true }))}>
-                            <span class="icon" aria-hidden="true">⎋</span><span class="text">Sign out</span>
+                            <span class="icon" aria-hidden="true">${icon('signOut')}</span><span class="text">Sign out</span>
                         </button>` : nothing}
                     <button type="button" class="fold" aria-expanded=${String(!this.folded)} title=${this.folded ? 'Expand' : nothing} @click=${() => this.toggle()}>
-                        <span class="icon" aria-hidden="true">«</span><span class="text">${this.folded ? 'Expand' : 'Collapse'}</span>
+                        <span class="icon" aria-hidden="true">${icon('collapse')}</span><span class="text">${this.folded ? 'Expand' : 'Collapse'}</span>
                     </button>
                 </footer>
             </aside>`

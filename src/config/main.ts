@@ -1,5 +1,6 @@
 export { CONFIG_VERSION } from './types.ts'
 export type * from './types.ts'
+export { ICON_NAMES } from './types.ts'
 export { validateConfig, parseConfig, ConfigError } from './validate.ts'
 export type { Validation } from './validate.ts'
 export { validateSchema, describeIssue } from './json-schema.ts'
