@@ -24,7 +24,7 @@ test.describe('demo app', () => {
 
     test('should search', async ({ page }) => {
         await page.getByLabel('Search').fill('Post 21')
-        await page.getByRole('button', { name: 'Search' }).click()
+        await page.keyboard.press('Enter')
         await expect(page.getByRole('cell', { name: 'Post 21', exact: true })).toBeVisible()
         await expect(page.getByRole('cell', { name: 'Post 1', exact: true })).toHaveCount(0)
     })
@@ -42,7 +42,7 @@ test.describe('demo app', () => {
 
         const find = async (term: string) => {
             await page.getByLabel('Search').fill(term)
-            await page.getByRole('button', { name: 'Search' }).click()
+            await page.keyboard.press('Enter')
         }
 
         await find(title)

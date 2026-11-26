@@ -104,7 +104,7 @@ const screens = {
   },
   'list-cards': async (page) => {
     await open(page, '#/posts', { type: 'none' })
-    await page.getByRole('button', { name: 'Cards' }).click()
+    await page.getByRole('button', { name: 'Card view' }).click()
     await page.getByText('Coffee tasting night').waitFor()
   },
   'list-selected': async (page) => {
