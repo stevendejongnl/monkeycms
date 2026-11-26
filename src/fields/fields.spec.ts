@@ -255,6 +255,7 @@ test.describe('monkey-richtext-field', () => {
 
     test('should make the selected text bold, and send the HTML', async ({ page }) => {
         await draw(page, '<p>Hello world</p>')
+        await editor(page).click()
         await editor(page).locator('p').selectText()
         await page.getByRole('button', { name: 'Bold' }).click()
 
