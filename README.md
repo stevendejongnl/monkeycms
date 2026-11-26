@@ -1,5 +1,7 @@
 # monkeycms
 
+<img src="docs/logo.svg" alt="MonkeyCMS" width="360">
+
 Monkey CMS is a simple, configurable API-based content management system (CMS), deriving its name from the Dutch pronunciation of 'API' as 'aapie'.
 
 > Status: early development. Nothing here is released yet.
@@ -263,6 +265,8 @@ Every colour, size and font is a CSS custom property, so a theme is a few lines 
 | `--monkey-control-border-color` | Input and button borders |
 | `--monkey-accent-color` | Primary button, active menu item |
 | `--monkey-accent-contrast-color` | Text on the accent. White or dark, chosen from the accent |
+| `--monkey-logo-ink-color` | The monkey and "Monkey" in the logo. Default: `--monkey-color` |
+| `--monkey-logo-accent-color` | The cap and "CMS" in the logo. Default: `--monkey-accent-color` |
 | `--monkey-link-color` | Links. The accent, lightened in dark mode |
 | `--monkey-error-color` | Error messages and borders |
 | `--monkey-radius` | Corner of buttons, inputs and cards |
@@ -270,6 +274,8 @@ Every colour, size and font is a CSS custom property, so a theme is a few lines 
 | `--monkey-field-gap` | Space between a label and its input |
 | `--monkey-padding` | Space in table cells |
 | `--monkey-font` | The font of all text |
+
+The logo is the `monkey-logo` element. It follows the theme: when the theme changes, the logo changes too. Add the `mark` attribute to show the monkey alone. The wordmark is Outfit ExtraBold (SIL Open Font License 1.1), drawn as paths, so no font has to load. `docs/logo.svg` is the logo in its own colours.
 
 To force a mode, set `data-theme="light"` or `data-theme="dark"` on the `html` element. Without it, the page follows the system. The link and contrast tokens are worked out from the accent on `:root`, so when you set the accent on the `monkey-app` element instead, set those two as well. For a compact look, make `--monkey-gap` and `--monkey-padding` smaller. The components need `dist/main.css` on the page, because that file defines the tokens.
 

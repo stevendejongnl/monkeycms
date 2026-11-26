@@ -1,6 +1,7 @@
 import { LitElement, css, html, nothing } from 'lit'
 import { customElement, property, state } from 'lit/decorators.js'
 import { hrefOf } from '../route.ts'
+import '../logo/logo.ts'
 
 
 export const SIGN_OUT = 'monkey-sign-out'
@@ -49,7 +50,7 @@ export class MonkeySidebar extends LitElement {
             position: sticky;
             inset-block-start: 0;
             display: grid;
-            grid-template-rows: 1fr auto;
+            grid-template-rows: auto 1fr auto;
             box-sizing: border-box;
             inline-size: 15rem;
             block-size: 100dvh;
@@ -58,6 +59,16 @@ export class MonkeySidebar extends LitElement {
 
         aside.folded {
             inline-size: 4.5rem;
+        }
+
+        header {
+            padding: 0.25rem 1.5rem 1.25rem;
+        }
+
+        monkey-logo {
+            block-size: 2.75rem;
+            --monkey-logo-ink-color: var(--monkey-accent-contrast-color);
+            --monkey-logo-accent-color: color-mix(in oklab, var(--monkey-accent-contrast-color) 65%, var(--monkey-accent-color));
         }
 
         ul {
@@ -128,6 +139,15 @@ export class MonkeySidebar extends LitElement {
             opacity: 0.85;
         }
 
+        .folded header {
+            padding-inline: 0;
+            text-align: center;
+        }
+
+        .folded monkey-logo {
+            block-size: 2rem;
+        }
+
         .folded :is(.text, .count, .who) {
             position: absolute;
             inline-size: 1px;
@@ -150,6 +170,10 @@ export class MonkeySidebar extends LitElement {
                 inline-size: auto;
                 block-size: auto;
                 grid-template-rows: auto;
+            }
+
+            header {
+                padding-block-end: 0.5rem;
             }
 
             ul {
@@ -215,6 +239,9 @@ export class MonkeySidebar extends LitElement {
     protected override render(): unknown {
         return html`
             <aside class=${this.folded ? 'folded' : ''}>
+                <header>
+                    <monkey-logo ?mark=${this.folded}></monkey-logo>
+                </header>
                 <nav aria-label="Collections">
                     <ul>${this.items.map((item) => this.item(item))}</ul>
                 </nav>
