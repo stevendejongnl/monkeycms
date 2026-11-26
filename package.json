@@ -19,7 +19,8 @@
     "test:unit": "node --test \"src/**/*.test.ts\" \"bin/src/**/*.test.ts\" \"examples/**/*.test.ts\"",
     "test:components": "playwright test",
     "serve": "npm run build && node bin/dist/cli.js serve",
-    "screenshots": "node scripts/screenshots.mjs . docs/screenshots/latest"
+    "screenshots": "node scripts/screenshots.mjs . docs/screenshots/latest",
+    "demo": "npm run build && node scripts/demo.mjs"
   },
   "keywords": [],
   "author": "Steven de Jong <steven@steven-dejong.nl>",
