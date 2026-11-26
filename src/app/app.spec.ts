@@ -353,6 +353,60 @@ test.describe('navigation', () => {
     })
 })
 
+test.describe('sidebar', () => {
+    test('should show the count of a collection once its list is loaded', async ({ page }) => {
+        await serve(page, threePosts())
+        await open(page, '#/posts')
+
+        const nav = app(page).getByRole('navigation', { name: 'Collections' })
+
+        await expect(nav.getByRole('link', { name: 'Posts' })).toContainText('3')
+        await expect(nav.getByRole('link', { name: 'notes' })).not.toContainText(/\d/)
+    })
+
+    test('should fold to a rail of icons, keep the names for screen readers, and remember it', async ({ page }) => {
+        await serve(page, threePosts())
+        await open(page, '#/posts')
+
+        const nav = app(page).getByRole('navigation', { name: 'Collections' })
+        const toggle = app(page).getByRole('button', { name: 'Collapse' })
+        const width = () => app(page).locator('monkey-sidebar').evaluate((element) => element.getBoundingClientRect().width)
+
+        const open_ = await width()
+
+        await toggle.click()
+
+        await expect(app(page).getByRole('button', { name: 'Expand' })).toHaveAttribute('aria-expanded', 'false')
+        await expect(nav.getByRole('link', { name: 'Posts' })).toBeVisible()
+        expect(await width()).toBeLessThan(open_ / 2)
+
+        await page.reload()
+        await open(page, '#/posts')
+
+        await expect(app(page).getByRole('button', { name: 'Expand' })).toBeVisible()
+
+        await app(page).getByRole('button', { name: 'Expand' }).click()
+
+        expect(await width()).toBe(open_)
+    })
+
+    test('should have Sign out only when the API needs a sign-in, and go back to the sign-in with it', async ({ page }) => {
+        await serve(page, threePosts())
+        await open(page, '#/posts')
+
+        await expect(app(page).getByRole('button', { name: 'Sign out' })).toHaveCount(0)
+
+        await page.reload()
+        await open(page, '#/posts', { type: 'bearer' })
+        await app(page).getByLabel('Token').fill('abc')
+        await app(page).getByRole('button', { name: 'Sign in' }).click()
+        await app(page).getByRole('button', { name: 'Sign out' }).click()
+
+        await expect(app(page).getByLabel('Token')).toBeVisible()
+        await expect(app(page).getByRole('navigation', { name: 'Collections' })).toHaveCount(0)
+    })
+})
+
 test.describe('entry editor', () => {
     test('should check the values before it sends anything', async ({ page }) => {
         const requests: string[] = []

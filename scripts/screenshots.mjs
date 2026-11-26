@@ -78,6 +78,18 @@ const screens = {
     await page.getByRole('button', { name: 'Preview A new spring menu' }).click()
     await page.getByRole('dialog').waitFor()
   },
+  'list-signed-in': async (page) => {
+    await open(page, '#/posts', { type: 'bearer' })
+    await page.getByLabel('Token').fill('abc')
+    await page.getByRole('button', { name: 'Sign in' }).click()
+    await page.getByRole('cell', { name: 'Coffee tasting night', exact: true }).waitFor()
+  },
+  'list-folded': async (page) => {
+    await open(page, '#/posts', { type: 'none' })
+    await page.getByRole('cell', { name: 'Coffee tasting night', exact: true }).waitFor()
+    await page.getByRole('button', { name: 'Collapse' }).click()
+    await page.getByRole('button', { name: 'Expand' }).waitFor()
+  },
   'list-cards': async (page) => {
     await open(page, '#/posts', { type: 'none' })
     await page.getByRole('button', { name: 'Cards' }).click()

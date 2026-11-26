@@ -7,6 +7,7 @@ import { getConfig } from 'config/main.ts'
 import type { CollectionConfig } from 'config/main.ts'
 import type { Entry, PageState } from 'mapping/main.ts'
 import { firstPage } from 'mapping/main.ts'
+import { setCount } from '../counts.ts'
 import { displayValue } from '../display.ts'
 import { hrefOf } from '../route.ts'
 
@@ -345,6 +346,11 @@ export class MonkeyCollectionList extends LitElement {
 
         if (result.ok) {
             this.page = result.value
+
+            // Only a list without search or filter says how many entries the collection has.
+            if (result.value.total !== undefined && this.term === '' && this.status === '') {
+                setCount(this.collection, result.value.total)
+            }
         } else {
             this.page = undefined
             this.message = result.error.message
