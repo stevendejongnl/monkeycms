@@ -23,6 +23,7 @@ const config = (auth: object = { type: 'none' }) => ({
                 status: { type: 'select', label: 'Status', options: ['draft', 'published'] },
                 body: { type: 'longtext', label: 'Body' },
             },
+            status: { field: 'status', param: 'status', publish: 'published' },
             list: { path: '/posts', itemsPath: 'data', totalPath: 'total', searchParam: 'q' },
             get: { path: '/posts/{id}', itemPath: 'data' },
             create: { path: '/posts', itemPath: 'data' },
@@ -55,7 +56,8 @@ const serve = async (page: Page, posts: Post[], requests: string[] = []) => {
             const term = url.searchParams.get('q') ?? ''
             const size = Number(url.searchParams.get('limit'))
             const start = (Number(url.searchParams.get('page')) - 1) * size
-            const found = posts.filter(({ title }) => title.includes(term))
+            const status = url.searchParams.get('status') ?? ''
+            const found = posts.filter((post) => post.title.includes(term) && (status === '' || post.status === status))
 
             return route.fulfill({ json: { data: found.slice(start, start + size), total: found.length } })
         }
@@ -109,7 +111,7 @@ test.describe('collection list', () => {
         await open(page, '#/posts')
 
         await expect(app(page).getByRole('heading', { name: 'Posts', exact: true })).toBeVisible()
-        await expect(app(page).getByRole('columnheader')).toHaveText(['Title', 'Status', 'Actions'])
+        await expect(app(page).getByRole('columnheader')).toHaveText(['', 'Title', 'Status', 'Actions'])
         await expect(app(page).getByRole('row')).toHaveCount(3)
         await expect(app(page).getByRole('cell', { name: 'First post', exact: true })).toBeVisible()
         await expect(app(page).getByText('3 entries')).toBeVisible()
@@ -172,6 +174,78 @@ test.describe('collection list', () => {
 
         await expect(app(page).getByRole('cell', { name: 'First post', exact: true })).toHaveCount(0)
         expect(requests).toContain('DELETE /posts/1')
+    })
+
+    test('should filter by status with the tabs', async ({ page }) => {
+        const requests: string[] = []
+
+        await serve(page, threePosts(), requests)
+        await open(page, '#/posts')
+        await app(page).getByRole('button', { name: 'published' }).click()
+
+        await expect(app(page).getByRole('row')).toHaveCount(2)
+        await expect(app(page).getByRole('button', { name: 'published' })).toHaveAttribute('aria-pressed', 'true')
+        expect(requests.at(-1)).toContain('status=published')
+
+        await app(page).getByRole('button', { name: 'All' }).click()
+
+        await expect(app(page).getByRole('row')).toHaveCount(3)
+    })
+
+    test('should switch to cards and remember it for the collection', async ({ page }) => {
+        await serve(page, threePosts())
+        await open(page, '#/posts')
+        await app(page).getByRole('button', { name: 'Cards' }).click()
+
+        await expect(app(page).getByRole('table')).toHaveCount(0)
+        await expect(app(page).getByRole('list', { name: 'Posts' }).getByRole('listitem')).toHaveCount(2)
+
+        await page.reload()
+        await open(page, '#/posts')
+
+        await expect(app(page).getByRole('list', { name: 'Posts' }).getByRole('listitem')).toHaveCount(2)
+
+        await app(page).getByRole('button', { name: 'Table' }).click()
+
+        await expect(app(page).getByRole('table')).toBeVisible()
+    })
+
+    test('should publish the selected entries', async ({ page }) => {
+        const requests: string[] = []
+
+        await serve(page, threePosts(), requests)
+        await open(page, '#/posts')
+        await expect(app(page).getByRole('region', { name: 'Bulk actions' })).toHaveCount(0)
+        await app(page).getByRole('checkbox', { name: 'Select First post' }).check()
+        await app(page).getByRole('checkbox', { name: 'Select Second post' }).check()
+
+        await expect(app(page).getByText('2 selected')).toBeVisible()
+
+        await app(page).getByRole('button', { name: 'Publish', exact: true }).click()
+
+        await expect(app(page).getByText('2 selected')).toHaveCount(0)
+        expect(requests).toContain('PUT /posts/1')
+        expect(requests).toContain('PUT /posts/2')
+        expect(requests.filter((request) => request.startsWith('PUT'))).toHaveLength(2)
+    })
+
+    test('should delete the selected entries only after a confirmation', async ({ page }) => {
+        const requests: string[] = []
+
+        await serve(page, threePosts(), requests)
+        await open(page, '#/posts')
+        await app(page).getByRole('checkbox', { name: 'Select all' }).check()
+        await app(page).getByRole('button', { name: 'Delete selected' }).click()
+        await app(page).getByRole('button', { name: 'Cancel' }).click()
+
+        expect(requests.some((request) => request.startsWith('DELETE'))).toBe(false)
+
+        await app(page).getByRole('button', { name: 'Delete selected' }).click()
+        await app(page).getByRole('button', { name: 'Confirm delete 2' }).click()
+
+        await expect(app(page).getByRole('cell', { name: 'Third thing', exact: true })).toBeVisible()
+        await expect(app(page).getByRole('cell', { name: 'First post', exact: true })).toHaveCount(0)
+        expect(requests.filter((request) => request.startsWith('DELETE'))).toEqual(['DELETE /posts/1', 'DELETE /posts/2'])
     })
 
     test('should say when the API fails', async ({ page }) => {

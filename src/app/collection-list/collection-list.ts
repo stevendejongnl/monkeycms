@@ -5,7 +5,7 @@ import type { ListPage } from 'client/main.ts'
 import { alertStyles, buttonStyles, controlStyles, linkStyles } from 'base/styles.ts'
 import { getConfig } from 'config/main.ts'
 import type { CollectionConfig } from 'config/main.ts'
-import type { PageState } from 'mapping/main.ts'
+import type { Entry, PageState } from 'mapping/main.ts'
 import { firstPage } from 'mapping/main.ts'
 import { displayValue } from '../display.ts'
 import { hrefOf } from '../route.ts'
@@ -15,8 +15,30 @@ import { hrefOf } from '../route.ts'
 const columnsOf = (collection: CollectionConfig) =>
     Object.entries(collection.fields).filter(([, field]) => field.type !== 'longtext')
 
-// Shows the entries of a collection in a table: one page at a time, with search when the
-// config has a searchParam, a link to each entry, and delete after a confirmation.
+type View = 'table' | 'cards'
+
+const viewKey = (collection: string): string => `monkeycms:view:${collection}`
+
+// The chosen view is a convenience, so a browser that blocks storage just gets the table.
+const savedView = (collection: string): View => {
+    try {
+        return localStorage.getItem(viewKey(collection)) === 'cards' ? 'cards' : 'table'
+    } catch {
+        return 'table'
+    }
+}
+
+const saveView = (collection: string, view: View): void => {
+    try {
+        localStorage.setItem(viewKey(collection), view)
+    } catch {
+        // Not saved. The view still changes for this visit.
+    }
+}
+
+// Shows the entries of a collection as a table or as cards: one page at a time, with search
+// when the config has a searchParam, tabs when it has a status param, a link to each entry,
+// delete after a confirmation, and bulk Publish and Delete for the selected entries.
 @customElement('monkey-collection-list')
 export class MonkeyCollectionList extends LitElement {
     static override styles = [controlStyles, buttonStyles, linkStyles, alertStyles, css`
@@ -99,9 +121,90 @@ export class MonkeyCollectionList extends LitElement {
             align-items: center;
         }
 
-        td button, td a.button {
+        :is(td, .card) :is(button, a.button) {
             min-block-size: 2.75rem;
             padding: 0 1rem;
+        }
+
+        .tools {
+            display: grid;
+            grid-auto-flow: column;
+            justify-content: space-between;
+            gap: 1rem;
+            align-items: end;
+        }
+
+        .tabs, .views {
+            display: grid;
+            grid-auto-flow: column;
+            justify-content: start;
+            gap: 0.5rem;
+        }
+
+        .tabs button, .views button {
+            min-block-size: 2.75rem;
+            padding: 0 1rem;
+        }
+
+        button[aria-pressed='true'] {
+            color: var(--monkey-accent-contrast-color);
+            background: var(--monkey-accent-color);
+            border-color: transparent;
+        }
+
+        .bulk {
+            display: grid;
+            grid-auto-flow: column;
+            justify-content: start;
+            gap: 0.75rem;
+            align-items: center;
+            padding: 0.75rem 1.125rem;
+            background: var(--monkey-surface-color);
+            border: 1px solid var(--monkey-border-color);
+            border-radius: var(--monkey-radius);
+        }
+
+        .bulk button {
+            min-block-size: 2.75rem;
+            padding: 0 1rem;
+        }
+
+        .select {
+            inline-size: 1.375rem;
+        }
+
+        .cards {
+            display: grid;
+            grid-template-columns: repeat(auto-fill, minmax(16rem, 1fr));
+            gap: var(--monkey-gap);
+            margin: 0;
+            padding: 0;
+            list-style: none;
+        }
+
+        .card {
+            display: grid;
+            gap: 0.75rem;
+            align-content: start;
+            padding: var(--monkey-padding);
+            background: var(--monkey-surface-color);
+            border: 1px solid var(--monkey-border-color);
+            border-radius: calc(var(--monkey-radius) + 0.5rem);
+        }
+
+        .card dl {
+            display: grid;
+            grid-template-columns: auto 1fr;
+            gap: 0.25rem 0.75rem;
+            margin: 0;
+        }
+
+        .card dt {
+            color: var(--monkey-muted-color);
+        }
+
+        .card dd {
+            margin: 0;
         }
 
         .visually-hidden {
@@ -130,6 +233,10 @@ export class MonkeyCollectionList extends LitElement {
     @state() private history: readonly PageState[] = []
     @state() private term = ''
     @state() private confirming: string | undefined
+    @state() private view: View = 'table'
+    @state() private status = ''
+    @state() private selected: ReadonlySet<string> = new Set()
+    @state() private confirmingBulk = false
 
     private cancel: AbortController | undefined
 
@@ -145,8 +252,16 @@ export class MonkeyCollectionList extends LitElement {
             this.term = ''
             this.search = ''
             this.confirming = undefined
+            this.view = savedView(this.collection)
+            this.status = ''
+            this.clearSelection()
             void this.load()
         }
+    }
+
+    private clearSelection(): void {
+        this.selected = new Set()
+        this.confirmingBulk = false
     }
 
     private async load(): Promise<void> {
@@ -164,7 +279,7 @@ export class MonkeyCollectionList extends LitElement {
             return
         }
 
-        const result = await client.list(this.collection, { page: this.current, search: this.term, signal: this.cancel.signal })
+        const result = await client.list(this.collection, { page: this.current, search: this.term, status: this.status, signal: this.cancel.signal })
 
         if (!result.ok && result.error.kind === 'aborted') {
             return
@@ -184,7 +299,65 @@ export class MonkeyCollectionList extends LitElement {
         this.current = page
         this.history = history
         this.confirming = undefined
+        this.clearSelection()
         void this.load()
+    }
+
+    private setView(view: View): void {
+        this.view = view
+        saveView(this.collection, view)
+    }
+
+    private setStatus(status: string): void {
+        this.status = status
+        this.go(firstPage, [])
+    }
+
+    private toggle(id: string, on: boolean): void {
+        const selected = new Set(this.selected)
+
+        on ? selected.add(id) : selected.delete(id)
+        this.selected = selected
+        this.confirmingBulk = false
+    }
+
+    private toggleAll(on: boolean): void {
+        this.selected = new Set(on ? this.page?.items.map(({ id }) => id) : [])
+        this.confirmingBulk = false
+    }
+
+    // Runs one call per selected entry. It reports the first failure, and always reloads, so
+    // the list shows what the API really did.
+    private async bulk(run: (id: string) => Promise<{ ok: boolean, error?: { message: string } } | undefined>): Promise<void> {
+        const failures: string[] = []
+
+        for (const id of this.selected) {
+            const result = await run(id)
+
+            if (result?.ok === false) {
+                failures.push(result.error?.message ?? 'Failed')
+            }
+        }
+
+        this.clearSelection()
+        await this.load()
+        this.message = failures.length === 0 ? '' : `${failures.length} of the entries failed: ${failures[0]}`
+    }
+
+    private bulkDelete(): Promise<void> {
+        return this.bulk((id) => getClient()?.remove(this.collection, id) ?? Promise.resolve(undefined))
+    }
+
+    private bulkPublish(collection: CollectionConfig): Promise<void> {
+        const status = collection.status
+
+        return this.bulk((id) => {
+            const entry = this.page?.items.find((item) => item.id === id)
+
+            return status?.publish === undefined || entry === undefined
+                ? Promise.resolve(undefined)
+                : getClient()?.update(this.collection, id, { ...entry.values, [status.field]: status.publish }) ?? Promise.resolve(undefined)
+        })
     }
 
     private next(): void {
@@ -234,7 +407,6 @@ export class MonkeyCollectionList extends LitElement {
         const route = hrefOf({ view: 'edit', collection: this.collection, id })
 
         return html`
-            <td>
                 <div class="actions">
                     ${collection.get !== undefined || collection.update !== undefined
                         ? html`<a class="button" href=${route} aria-label=${`Edit ${label}`}>Edit</a>`
@@ -244,37 +416,98 @@ export class MonkeyCollectionList extends LitElement {
                             <button type="button" class="danger" @click=${() => this.deleteEntry(id)}>Confirm delete</button>
                             <button type="button" @click=${() => { this.confirming = undefined }}>Cancel</button>`
                         : html`<button type="button" class="danger" aria-label=${`Delete ${label}`} @click=${() => { this.confirming = id }}>Delete</button>`}
-                </div>
-            </td>`
+                </div>`
+    }
+
+    private selectable(collection: CollectionConfig): boolean {
+        return collection.delete !== undefined || (collection.status?.publish !== undefined && collection.update !== undefined)
+    }
+
+    private labelOf(entry: Entry): string {
+        return String(Object.values(entry.values).find((value) => typeof value === 'string' && value !== '') ?? entry.id)
+    }
+
+    private checkbox(entry: Entry): unknown {
+        return html`<input type="checkbox" class="select" aria-label=${`Select ${this.labelOf(entry)}`} .checked=${this.selected.has(entry.id)}
+            @change=${(event: Event) => this.toggle(entry.id, (event.target as HTMLInputElement).checked)}>`
     }
 
     private table(collection: CollectionConfig, page: ListPage): unknown {
         const columns = columnsOf(collection)
+        const selectable = this.selectable(collection)
 
+        return html`
+            <div class="table">
+                <table>
+                    <caption class="visually-hidden">${collection.label ?? this.collection}</caption>
+                    <thead>
+                        <tr>
+                            ${selectable ? html`<th scope="col"><input type="checkbox" class="select" aria-label="Select all" .checked=${this.selected.size === page.items.length}
+                                @change=${(event: Event) => this.toggleAll((event.target as HTMLInputElement).checked)}></th>` : nothing}
+                            ${columns.map(([name, field]) => html`<th scope="col">${field.label ?? name}</th>`)}
+                            <th scope="col">Actions</th>
+                        </tr>
+                    </thead>
+                    <tbody>
+                        ${page.items.map((entry) => html`<tr>
+                            ${selectable ? html`<td>${this.checkbox(entry)}</td>` : nothing}
+                            ${columns.map(([name]) => html`<td>${this.cell(name, entry.values[name], collection)}</td>`)}
+                            <td>${this.actions(entry.id, this.labelOf(entry), collection)}</td>
+                        </tr>`)}
+                    </tbody>
+                </table>
+            </div>`
+    }
+
+    private cards(collection: CollectionConfig, page: ListPage): unknown {
+        const columns = columnsOf(collection)
+        const selectable = this.selectable(collection)
+
+        return html`
+            <ul class="cards" aria-label=${collection.label ?? this.collection}>
+                ${page.items.map((entry) => html`<li class="card">
+                    ${selectable ? this.checkbox(entry) : nothing}
+                    <dl>
+                        ${columns.map(([name, field]) => html`<dt>${field.label ?? name}</dt><dd>${this.cell(name, entry.values[name], collection)}</dd>`)}
+                    </dl>
+                    ${this.actions(entry.id, this.labelOf(entry), collection)}
+                </li>`)}
+            </ul>`
+    }
+
+    private entries(collection: CollectionConfig, page: ListPage): unknown {
         return page.items.length === 0
-            ? html`<p role="status">${this.term === '' ? 'No entries yet' : 'No entries found'}</p>`
-            : html`
-                <div class="table">
-                    <table>
-                        <caption class="visually-hidden">${collection.label ?? this.collection}</caption>
-                        <thead>
-                            <tr>
-                                ${columns.map(([name, field]) => html`<th scope="col">${field.label ?? name}</th>`)}
-                                <th scope="col">Actions</th>
-                            </tr>
-                        </thead>
-                        <tbody>
-                            ${page.items.map((entry) => {
-                                const label = String(Object.values(entry.values).find((value) => typeof value === 'string' && value !== '') ?? entry.id)
+            ? html`<p role="status">${this.term === '' && this.status === '' ? 'No entries yet' : 'No entries found'}</p>`
+            : this.view === 'cards' ? this.cards(collection, page) : this.table(collection, page)
+    }
 
-                                return html`<tr>
-                                    ${columns.map(([name]) => html`<td>${this.cell(name, entry.values[name], collection)}</td>`)}
-                                    ${this.actions(entry.id, label, collection)}
-                                </tr>`
-                            })}
-                        </tbody>
-                    </table>
-                </div>`
+    private tools(collection: CollectionConfig): unknown {
+        const status = collection.status
+        const options = status === undefined ? undefined : collection.fields[status.field]?.options
+
+        return html`
+            <div class="tools">
+                ${status?.param === undefined || options === undefined ? html`<span></span>` : html`
+                    <div class="tabs" role="group" aria-label="Status">
+                        ${['', ...options].map((option) => html`<button type="button" aria-pressed=${String(this.status === option)} @click=${() => this.setStatus(option)}>${option === '' ? 'All' : option}</button>`)}
+                    </div>`}
+                <div class="views" role="group" aria-label="View">
+                    ${(['table', 'cards'] as const).map((view) => html`<button type="button" aria-pressed=${String(this.view === view)} @click=${() => this.setView(view)}>${view === 'table' ? 'Table' : 'Cards'}</button>`)}
+                </div>
+            </div>`
+    }
+
+    private bulkBar(collection: CollectionConfig): unknown {
+        return this.selected.size === 0 ? nothing : html`
+            <div class="bulk" role="region" aria-label="Bulk actions">
+                <span>${this.selected.size} selected</span>
+                ${collection.status?.publish === undefined || collection.update === undefined ? nothing : html`<button type="button" @click=${() => this.bulkPublish(collection)}>Publish</button>`}
+                ${collection.delete === undefined ? nothing : this.confirmingBulk
+                    ? html`
+                        <button type="button" class="danger" @click=${() => this.bulkDelete()}>Confirm delete ${this.selected.size}</button>
+                        <button type="button" @click=${() => { this.confirmingBulk = false }}>Cancel</button>`
+                    : html`<button type="button" class="danger" @click=${() => { this.confirmingBulk = true }}>Delete selected</button>`}
+            </div>`
     }
 
     private pager(page: ListPage): unknown {
@@ -303,8 +536,10 @@ export class MonkeyCollectionList extends LitElement {
                     <label>Search <input type="search" .value=${this.search} @input=${(event: Event) => { this.search = (event.target as HTMLInputElement).value }}></label>
                     <button type="submit">Search</button>
                 </form>`}
+            ${this.tools(collection)}
+            ${this.bulkBar(collection)}
             ${this.message === '' ? nothing : html`<p role="alert">${this.message}</p>`}
             ${this.loading ? html`<p role="status">Loading…</p>` : nothing}
-            ${this.page === undefined ? nothing : html`${this.table(collection, this.page)}${this.pager(this.page)}`}`
+            ${this.page === undefined ? nothing : html`${this.entries(collection, this.page)}${this.pager(this.page)}`}`
     }
 }

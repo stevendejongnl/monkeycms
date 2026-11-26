@@ -136,8 +136,13 @@ A small config. The full list of keys is in `src/config/monkeycms.schema.json`, 
 | `label` | The name in the menu and the title. Defaults to the key. |
 | `idPath` | Where the id is in one API item. Default `id`. |
 | `fields` | The fields, by name. |
+| `status` | Optional. Names the select field that holds the status, for the status tabs and the bulk Publish. See below. |
 | `list` | Required. The other four are optional. A screen only offers what you describe: no `create` means no New button, no `delete` means no Delete button. |
 | `get`, `create`, `update`, `delete` | Endpoints. |
+
+**Status.** `status` is `{ "field": "status", "param": "filter[status]", "publish": "published" }`. `field` is a select field of the collection. With `param` (the query parameter of the list endpoint) the list gets one tab for each option of the field, and an All tab. With `publish` (one of the options) and an `update` endpoint, the bulk bar gets a Publish button that sets the field of each selected entry to that value.
+
+The list shows a table or cards, as the person chooses. The choice is kept in the browser for each collection. Where the config has `delete`, or `status.publish` and `update`, each entry has a checkbox, and the selected entries get a bar with Publish and Delete (after a confirmation).
 
 **Endpoint.** `path` is a template under `baseUrl`, and `{id}` is the id of the entry. `method` defaults to GET for `list` and `get`, POST for `create`, PUT for `update` and DELETE for `delete`. `query` and `headers` are added for this endpoint, and the values in `query` can use `{name}` like the path. For `list`: `itemsPath` (where the array is, leave out when the body is the array), `totalPath`, `pagination` and `searchParam` (the query parameter for a search term; without it there is no search box). For `get`, `create` and `update`: `itemPath` (where the entry is in the answer), and `body` for create and update, with `wrap` (the key that holds the entry in the request, for example `data`) and `static` (constants to add, as API path to value, for example `{ "data.type": "posts" }`).
 

@@ -38,6 +38,8 @@ export interface ListOptions extends CallOptions {
     readonly vars?: Readonly<Record<string, unknown>>
     // A search term. It is sent in the searchParam of the list endpoint, and only when it is not empty.
     readonly search?: string
+    // A status value. It is sent in the status param of the collection, and only when it is not empty.
+    readonly status?: string
 }
 
 export interface ApiClient {
