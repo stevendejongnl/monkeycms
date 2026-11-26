@@ -52,17 +52,17 @@ export class MonkeySidebar extends LitElement {
             display: grid;
             grid-template-rows: auto 1fr auto;
             box-sizing: border-box;
-            inline-size: 15rem;
+            inline-size: 16.5rem;
             block-size: 100dvh;
-            padding-block: 1rem;
+            padding: 1rem;
         }
 
         aside.folded {
-            inline-size: 4.5rem;
+            inline-size: 5rem;
         }
 
         header {
-            padding: 0.25rem 1.5rem 1.25rem;
+            padding: 0 0 0.25rem;
         }
 
         monkey-logo {
@@ -76,14 +76,13 @@ export class MonkeySidebar extends LitElement {
             align-content: start;
             gap: 0.25rem;
             margin: 0;
-            padding: 0 0.75rem;
+            padding: 0;
             list-style: none;
         }
 
         footer {
             display: grid;
             gap: 0.25rem;
-            padding: 0 0.75rem;
         }
 
         a, button {
@@ -96,7 +95,7 @@ export class MonkeySidebar extends LitElement {
             padding: 0;
             padding-inline-end: 0.75rem;
             font: inherit;
-            font-weight: 600;
+            font-weight: 500;
             text-align: start;
             color: inherit;
             text-decoration: none;
@@ -111,7 +110,9 @@ export class MonkeySidebar extends LitElement {
         }
 
         a[aria-current='page'] {
-            background: color-mix(in oklab, currentColor 22%, transparent);
+            font-weight: 700;
+            color: var(--monkey-accent-color);
+            background: var(--monkey-accent-contrast-color);
         }
 
         a:focus-visible, button:focus-visible {
