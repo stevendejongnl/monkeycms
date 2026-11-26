@@ -9,7 +9,7 @@ interface Post {
     body?: string
 }
 
-const config = (auth: object = { type: 'none' }, theme?: object) => ({
+const config = (auth: object = { type: 'none' }, theme?: object, body: object = { type: 'longtext', label: 'Body' }) => ({
     configVersion: 1,
     ...(theme === undefined ? {} : { theme }),
     baseUrl: 'https://api.example.com',
@@ -22,7 +22,7 @@ const config = (auth: object = { type: 'none' }, theme?: object) => ({
             fields: {
                 title: { type: 'text', label: 'Title', required: true },
                 status: { type: 'select', label: 'Status', options: ['draft', 'published'] },
-                body: { type: 'longtext', label: 'Body' },
+                body,
             },
             status: { field: 'status', param: 'status', publish: 'published' },
             preview: { fields: ['title', 'status', 'body'] },
@@ -89,14 +89,14 @@ const serve = async (page: Page, posts: Post[], requests: string[] = []) => {
     })
 }
 
-const open = async (page: Page, hash = '', auth?: object, theme?: object) => {
+const open = async (page: Page, hash = '', auth?: object, theme?: object, body?: object) => {
     await page.goto(`/public/index.html${hash}`)
     await page.evaluate((json) => {
         const setUp = document.createElement('monkey-set-up')
 
         setUp.setAttribute('config', JSON.stringify(json))
         document.body.append(setUp, document.createElement('monkey-app'))
-    }, config(auth, theme))
+    }, config(auth, theme, body))
     await expect(page.locator('monkey-set-up[config]').getByRole('status')).toBeVisible()
 }
 
@@ -405,6 +405,35 @@ test.describe('sidebar', () => {
 
         await expect(app(page).getByLabel('Token')).toBeVisible()
         await expect(app(page).getByRole('navigation', { name: 'Collections' })).toHaveCount(0)
+    })
+})
+
+test.describe('rich-text field', () => {
+    const richtext = { type: 'richtext', label: 'Body', format: 'markdown' }
+
+    test('should edit a Markdown value as formatted text, and show it as plain text in the preview', async ({ page }) => {
+        await serve(page, [{ id: 1, title: 'First post', body: '## Heading\n\nSome **bold** text' }])
+        await open(page, '#/posts/1', undefined, undefined, richtext)
+
+        const editor = app(page).getByRole('textbox', { name: 'Body' })
+
+        await expect(editor.getByRole('heading', { name: 'Heading' })).toBeVisible()
+        await expect(editor.locator('strong')).toHaveText('bold')
+
+        await app(page).getByRole('button', { name: 'Preview', exact: true }).click()
+
+        await expect(app(page).getByRole('button', { name: /Body/ })).toContainText('Heading Some bold text')
+    })
+
+    test('should not be a column in the list, and show as plain text in the drawer', async ({ page }) => {
+        await serve(page, [{ id: 1, title: 'First post', body: '<h2>Heading</h2><p>Some <em>text</em></p>' }])
+        await open(page, '#/posts', undefined, undefined, { type: 'richtext', label: 'Body' })
+
+        await expect(app(page).getByRole('columnheader', { name: 'Body' })).toHaveCount(0)
+
+        await app(page).getByRole('button', { name: 'Preview First post' }).click()
+
+        await expect(app(page).getByRole('dialog', { name: 'Preview First post' })).toContainText('Heading Some text')
     })
 })
 

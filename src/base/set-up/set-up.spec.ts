@@ -63,7 +63,7 @@ test.describe('SetUp', () => {
     })
 
     test('should show which key of the config is wrong', async ({ page }) => {
-        const broken = { ...config, collections: { posts: { fields: { title: { type: 'richtext' } }, list: { path: '/posts' } } } }
+        const broken = { ...config, collections: { posts: { fields: { title: { type: 'markdownish' } }, list: { path: '/posts' } } } }
 
         await addSetUp(page, { config: JSON.stringify(broken) })
 

@@ -57,6 +57,8 @@ describe('displayValue', () => {
         assert.equal(displayValue({ type: 'boolean' }, false), 'No')
         assert.equal(displayValue({ type: 'date' }, '2026-11-25T08:30:00.000Z'), '2026-11-25')
         assert.equal(displayValue({ type: 'text' }, ['a', 'b']), 'a, b')
+        assert.equal(displayValue({ type: 'richtext' }, '<h2>T</h2><p>a <strong>b</strong> &amp; c<br>d</p>'), 'T a b & c d')
+        assert.equal(displayValue({ type: 'richtext', format: 'markdown' }, '## T\n\na **b**'), 'T a b')
         assert.equal(displayValue({ type: 'number' }, 0), '0')
         assert.equal(displayValue({ type: 'text' }, undefined), '')
         assert.equal(displayValue({ type: 'text' }, { a: 1 }), '{"a":1}')

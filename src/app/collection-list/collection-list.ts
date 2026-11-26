@@ -14,7 +14,7 @@ import { hrefOf } from '../route.ts'
 
 // A long text does not fit in a table cell.
 const columnsOf = (collection: CollectionConfig) =>
-    Object.entries(collection.fields).filter(([, field]) => field.type !== 'longtext')
+    Object.entries(collection.fields).filter(([, field]) => field.type !== 'longtext' && field.type !== 'richtext')
 
 type View = 'table' | 'cards'
 

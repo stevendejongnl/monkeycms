@@ -475,6 +475,7 @@
           "enum": [
             "text",
             "longtext",
+            "richtext",
             "number",
             "boolean",
             "date",
@@ -502,6 +503,12 @@
           "items": {
             "type": "string"
           }
+        },
+        "format": {
+          "enum": [
+            "html",
+            "markdown"
+          ]
         }
       }
     },
