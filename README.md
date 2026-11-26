@@ -10,6 +10,38 @@ MonkeyCMS has no backend of its own. It is a front-end CMS, built from web compo
 
 The same MonkeyCMS build can work with many different APIs. Only the config changes.
 
+## Quick start
+
+MonkeyCMS is not on npm yet, so run it from a clone. You need Node 26 or newer.
+
+```
+git clone https://github.com/stevendejongnl/monkeycms
+cd monkeycms
+npm install
+npm run demo        # the app against a mock API, on http://127.0.0.1:8080/
+```
+
+The demo needs no API of your own. To point MonkeyCMS at a real API:
+
+```
+node bin/dist/cli.js init ../my-cms           # public/index.html and public/monkey.config.json
+cd ../my-cms
+# edit public/monkey.config.json
+node ../monkeycms/bin/dist/cli.js check --probe   # does the config fit the live API?
+node ../monkeycms/bin/dist/cli.js serve           # http://127.0.0.1:8080/public/index.html
+```
+
+The page is two elements and a script. `monkey-set-up` loads and validates the config, and `monkey-app` draws the screens:
+
+```html
+<link rel="stylesheet" href="/dist/main.css">
+<monkey-set-up get-set-up-endpoint="/public/monkey.config.json"></monkey-set-up>
+<monkey-app></monkey-app>
+<script type="module" src="/dist/main.js"></script>
+```
+
+Put the config inline with `<monkey-set-up config='{"configVersion": 1, ...}'>` instead of the endpoint when you do not want a second request.
+
 ## Principles
 
 - **Data-only config.** The config is JSON. It contains no code, and MonkeyCMS never runs `eval` or `Function` on it. A config from an untrusted source cannot run code.
@@ -54,7 +86,94 @@ The config says:
 - how pagination works: page and limit, offset and limit, cursor, Link header or none;
 - where an error response keeps its message.
 
-The config format is described by `src/config/monkeycms.schema.json`.
+The config format is described by `src/config/monkeycms.schema.json` and, in short, in the [Config reference](#config-reference).
+
+### Config reference
+
+A small config. The full list of keys is in `src/config/monkeycms.schema.json`, and `monkeycms check` reports every key that does not fit it, with its path.
+
+```json
+{
+  "configVersion": 1,
+  "baseUrl": "https://api.example.com",
+  "auth": { "type": "bearer" },
+  "pagination": { "type": "page", "pageParam": "page", "limitParam": "per_page", "pageSize": 20 },
+  "errors": { "messagePath": "message", "fieldErrorsPath": "errors" },
+  "collections": {
+    "posts": {
+      "label": "Posts",
+      "fields": {
+        "title": { "type": "text", "label": "Title", "required": true },
+        "status": { "type": "select", "label": "Status", "options": ["draft", "published"] },
+        "tags": { "type": "text", "label": "Tags", "transform": { "type": "join", "separator": ", " } }
+      },
+      "list": { "path": "/posts", "itemsPath": "data", "totalPath": "meta.total", "searchParam": "q" },
+      "get": { "path": "/posts/{id}", "itemPath": "data" },
+      "create": { "path": "/posts", "itemPath": "data" },
+      "update": { "method": "PATCH", "path": "/posts/{id}", "itemPath": "data" },
+      "delete": { "path": "/posts/{id}" }
+    }
+  }
+}
+```
+
+**Top level**
+
+| Key | Meaning |
+|-----|---------|
+| `configVersion` | Always `1`. |
+| `baseUrl` | The API. Every endpoint `path` is added to it. |
+| `auth` | How to sign in. See [Authentication](#authentication). Without it nothing is sent as a credential. |
+| `headers` | Headers sent with every request. |
+| `pagination` | The default for every list. A list can set its own. |
+| `errors` | How to read an error answer. |
+| `collections` | The things you edit, by name. |
+
+**Collection**
+
+| Key | Meaning |
+|-----|---------|
+| `label` | The name in the menu and the title. Defaults to the key. |
+| `idPath` | Where the id is in one API item. Default `id`. |
+| `fields` | The fields, by name. |
+| `list` | Required. The other four are optional. A screen only offers what you describe: no `create` means no New button, no `delete` means no Delete button. |
+| `get`, `create`, `update`, `delete` | Endpoints. |
+
+**Endpoint.** `path` is a template under `baseUrl`, and `{id}` is the id of the entry. `method` defaults to GET for `list` and `get`, POST for `create`, PUT for `update` and DELETE for `delete`. `query` and `headers` are added for this endpoint, and the values in `query` can use `{name}` like the path. For `list`: `itemsPath` (where the array is, leave out when the body is the array), `totalPath`, `pagination` and `searchParam` (the query parameter for a search term; without it there is no search box). For `get`, `create` and `update`: `itemPath` (where the entry is in the answer), and `body` for create and update, with `wrap` (the key that holds the entry in the request, for example `data`) and `static` (constants to add, as API path to value, for example `{ "data.type": "posts" }`).
+
+**Field**
+
+| Key | Meaning |
+|-----|---------|
+| `type` | `text`, `longtext`, `number`, `boolean`, `date` or `select`. |
+| `label` | Defaults to the field name. |
+| `required` | The form refuses an empty value. |
+| `readOnly` | Shown, but not sent on create and update. |
+| `path` | Where the value is in the API item. Default the field name. The same path is used to write the request body. |
+| `options` | The choices of a `select`. |
+| `transform` | Changes the value between API and form: `"string"`, `"number"`, `"boolean"`, `"date"`, `{ "type": "join", "separator": ", " }` (a list in the API, one text in the form), `{ "type": "split", "separator": ", " }` (the other way) or `{ "type": "default", "value": ... }`. |
+
+**Paths.** Every `...Path` is a dot path (`data.items`, `meta.total`), with list positions as `[0]` or `.0` (`errors[0].detail`). A JSON Pointer (`/data/attributes/title`) also works.
+
+**Pagination**
+
+| `type` | Keys | MonkeyCMS stops when |
+|--------|------|----------------------|
+| `none` | | there is one page |
+| `page` | `pageParam`, `limitParam`, `pageSize`, `startPage` | a page has fewer items than `pageSize`, or the pages passed `totalPath` |
+| `offset` | `offsetParam`, `limitParam`, `pageSize` | the same as `page` |
+| `cursor` | `cursorParam`, `nextCursorPath`, `pageSize`, `limitParam` | there is no cursor at `nextCursorPath` |
+| `link-header` | `pageSize`, `limitParam` | the answer has no `Link` header with `rel="next"`. Only a link to the same host is followed. |
+
+**Errors**
+
+| Key | Meaning |
+|-----|---------|
+| `messagePath` | Where the message is. Without it, or when it is not there, the message is `HTTP <status>`. |
+| `fieldErrorsPath` | An object that maps field names to a message or a list of messages. It can also be an array of errors, see the next two keys. |
+| `fieldNamePath`, `fieldMessagePath` | For an array of errors: where the field name and the message are inside each error. The field name is the last part of the value, so the JSON Pointer `/data/attributes/title` gives `title`. |
+
+The five configs in [Examples](#examples) cover these keys for common API styles. Copy the one that looks like your API.
 
 ### Examples
 
@@ -151,6 +270,10 @@ npm run demo -- jsonapi -p 9000
 
 - A server, database or file storage. Bring your own API.
 - Running user code from the config.
+
+## License
+
+AGPL-3.0-only. See [LICENSE](LICENSE).
 
 ## Roadmap
 
