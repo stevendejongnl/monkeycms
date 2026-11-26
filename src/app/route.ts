@@ -1,5 +1,6 @@
 export type Route =
     | { readonly view: 'home' }
+    | { readonly view: 'settings' }
     | { readonly view: 'list', readonly collection: string }
     | { readonly view: 'new', readonly collection: string }
     | { readonly view: 'edit', readonly collection: string, readonly id: string }
@@ -9,7 +10,7 @@ const HOME: Route = { view: 'home' }
 // The parsers, by the number of segments in the hash: "#/posts", "#/posts/new", "#/posts/12".
 const parsers: readonly ((segments: readonly string[]) => Route)[] = [
     () => HOME,
-    ([collection = '']) => ({ view: 'list', collection }),
+    ([collection = '']) => collection === 'settings' ? { view: 'settings' } : { view: 'list', collection },
     ([collection = '', second = '']) => second === 'new' ? { view: 'new', collection } : { view: 'edit', collection, id: second },
 ]
 
@@ -30,6 +31,7 @@ export const parseRoute = (hash: string): Route => {
 
 const hrefs: { [V in Route['view']]: (route: Extract<Route, { view: V }>) => string } = {
     home: () => '#/',
+    settings: () => '#/settings',
     list: ({ collection }) => `#/${encodeURIComponent(collection)}`,
     new: ({ collection }) => `#/${encodeURIComponent(collection)}/new`,
     edit: ({ collection, id }) => `#/${encodeURIComponent(collection)}/${encodeURIComponent(id)}`,

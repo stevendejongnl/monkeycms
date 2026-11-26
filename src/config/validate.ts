@@ -125,7 +125,13 @@ const sectionFields: Rule = (config) =>
             }))
     })
 
-const rules: readonly Rule[] = [baseUrl, pathSyntax, entryPaths, selectOptions, statusField, previewFields, sectionFields]
+// The address #/settings is the settings screen, so no collection can have that name.
+const reservedNames: Rule = (config) =>
+    collectionsOf(config)
+        .filter(([name]) => name === 'settings')
+        .map(([name]) => ({ path: `collections.${name}`, message: 'is a reserved name, because #/settings is the settings screen' }))
+
+const rules: readonly Rule[] = [baseUrl, pathSyntax, entryPaths, selectOptions, statusField, previewFields, sectionFields, reservedNames]
 
 // Checks the config against the published schema first. The other rules need a config
 // of the right shape, so they run only when the schema check passes.

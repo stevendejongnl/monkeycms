@@ -9,8 +9,9 @@ interface Post {
     body?: string
 }
 
-const config = (auth: object = { type: 'none' }) => ({
+const config = (auth: object = { type: 'none' }, theme?: object) => ({
     configVersion: 1,
+    ...(theme === undefined ? {} : { theme }),
     baseUrl: 'https://api.example.com',
     auth,
     errors: { messagePath: 'message', fieldErrorsPath: 'errors' },
@@ -88,14 +89,14 @@ const serve = async (page: Page, posts: Post[], requests: string[] = []) => {
     })
 }
 
-const open = async (page: Page, hash = '', auth?: object) => {
+const open = async (page: Page, hash = '', auth?: object, theme?: object) => {
     await page.goto(`/public/index.html${hash}`)
     await page.evaluate((json) => {
         const setUp = document.createElement('monkey-set-up')
 
         setUp.setAttribute('config', JSON.stringify(json))
         document.body.append(setUp, document.createElement('monkey-app'))
-    }, config(auth))
+    }, config(auth, theme))
     await expect(page.locator('monkey-set-up[config]').getByRole('status')).toBeVisible()
 }
 
@@ -404,6 +405,54 @@ test.describe('sidebar', () => {
 
         await expect(app(page).getByLabel('Token')).toBeVisible()
         await expect(app(page).getByRole('navigation', { name: 'Collections' })).toHaveCount(0)
+    })
+})
+
+test.describe('theme and settings', () => {
+    const token = (page: Page, name: string) => page.evaluate((property) => document.documentElement.style.getPropertyValue(property), name)
+
+    test('should turn the theme of the config into tokens', async ({ page }) => {
+        await serve(page, threePosts())
+        await open(page, '#/posts', undefined, { preset: 'teal', mode: 'dark', radius: 'round' })
+
+        expect(await token(page, '--monkey-accent-color')).toBe('#0f766e')
+        expect(await token(page, '--monkey-radius')).toBe('1rem')
+        await expect(page.locator('html')).toHaveAttribute('data-theme', 'dark')
+    })
+
+    test('should change the look at once, keep the choice, and go back to the config on reset', async ({ page }) => {
+        await serve(page, threePosts())
+        await open(page, '#/posts', undefined, { preset: 'teal' })
+        await app(page).getByRole('link', { name: 'Settings' }).click()
+
+        await expect(app(page).getByRole('heading', { name: 'Settings' })).toBeVisible()
+        await expect(app(page).getByRole('button', { name: 'teal' })).toHaveAttribute('aria-pressed', 'true')
+
+        await app(page).getByRole('button', { name: 'rose' }).click()
+
+        expect(await token(page, '--monkey-accent-color')).toBe('#be123c')
+        await app(page).getByRole('group', { name: 'Mode' }).getByRole('button', { name: 'dark' }).click()
+        await expect(page.locator('html')).toHaveAttribute('data-theme', 'dark')
+
+        await page.reload()
+        await open(page, '#/settings', undefined, { preset: 'teal' })
+
+        expect(await token(page, '--monkey-accent-color')).toBe('#be123c')
+
+        await app(page).getByRole('button', { name: 'Reset to the config' }).click()
+
+        expect(await token(page, '--monkey-accent-color')).toBe('#0f766e')
+        await expect(page.locator('html')).not.toHaveAttribute('data-theme', /.+/)
+    })
+
+    test('should show the choice as config and as CSS in the code tab', async ({ page }) => {
+        await serve(page, threePosts())
+        await open(page, '#/settings')
+        await app(page).getByRole('button', { name: 'forest' }).click()
+        await app(page).getByRole('button', { name: 'Code' }).click()
+
+        await expect(app(page).getByText('"accent": "#166534"')).toBeVisible()
+        await expect(app(page).getByText('--monkey-accent-color: #166534;')).toBeVisible()
     })
 })
 

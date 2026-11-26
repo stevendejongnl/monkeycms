@@ -90,6 +90,18 @@ const screens = {
     await page.getByRole('button', { name: 'Collapse' }).click()
     await page.getByRole('button', { name: 'Expand' }).waitFor()
   },
+  settings: async (page) => {
+    await page.setViewportSize({ width: 1100, height: 900 })
+    await open(page, '#/settings', { type: 'none' })
+    await page.getByRole('button', { name: 'teal' }).click()
+  },
+  'settings-code': async (page) => {
+    await page.setViewportSize({ width: 1100, height: 1000 })
+    await open(page, '#/settings', { type: 'none' })
+    await page.getByRole('button', { name: 'forest' }).click()
+    await page.getByRole('button', { name: 'Code' }).click()
+    await page.getByText('--monkey-accent-color: #166534;').waitFor()
+  },
   'list-cards': async (page) => {
     await open(page, '#/posts', { type: 'none' })
     await page.getByRole('button', { name: 'Cards' }).click()
