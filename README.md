@@ -130,7 +130,11 @@ To force a mode, set `data-theme="light"` or `data-theme="dark"` on the `html` e
 monkeycms init [folder]    # writes public/index.html and public/monkey.config.json, and never replaces a file
 monkeycms serve [-p 8080]  # serves public/ and dist/ on http://127.0.0.1:8080/public/index.html
 monkeycms build            # runs the build script of the project
+monkeycms check [config]   # validates a config; default public/monkey.config.json
+monkeycms check [config] --probe   # also asks the list endpoint of each collection
 ```
+
+`check` prints every problem of the config with its path, and exits with 1 when there is one. With `--probe` it sends GET requests to the list endpoint of each collection, without a sign-in, and reports what the mapping found: the items and their ids, how many items have each field, and whether page 2 differs from page 1. An API that needs a sign-in answers 401, and the report says so. Use it to get a new config right before you open the browser.
 
 `serve` uses the `dist` folder of the project when it has one, and the built files of MonkeyCMS when it does not. The sample config from `init` talks to the public JSONPlaceholder API, so it runs as it is.
 
@@ -158,7 +162,7 @@ You need Node 26 or newer.
 
 ```
 npm install
-npm run build        # bundles src/ into dist/ and compiles the CLI in bin/
+npm run build        # bundles src/ into dist/ and the CLI in bin/ into bin/dist/cli.js
 npm run typecheck    # strict TypeScript check
 npm test             # typecheck, build, unit tests (node:test), component tests (Playwright)
 npm run serve        # build, then serve http://127.0.0.1:8080/public/index.html

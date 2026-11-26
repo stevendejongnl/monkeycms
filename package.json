@@ -12,7 +12,7 @@
   },
   "scripts": {
     "clean": "node -e \"for (const d of ['dist', 'bin/dist']) fs.rmSync(d, { recursive: true, force: true })\"",
-    "build": "npm run clean && node scripts/build.mjs && tsc -p bin/tsconfig.build.json",
+    "build": "npm run clean && node scripts/build.mjs",
     "typecheck": "tsc --noEmit && tsc --noEmit -p bin",
     "pretest": "npm run typecheck && npm run build",
     "test": "npm run test:unit && npm run test:components",

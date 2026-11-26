@@ -1,9 +1,9 @@
 import { copyFile, mkdir, readdir, stat } from 'node:fs/promises'
 import { dirname, join, resolve } from 'node:path'
-import { fileURLToPath } from 'node:url'
+import { packageRoot } from '../root.ts'
 
 
-export const TEMPLATE = fileURLToPath(new URL('../../../templates/init/', import.meta.url))
+export const TEMPLATE = join(packageRoot(), 'templates', 'init')
 
 // The files of the template, as paths under the template folder.
 const filesIn = async (folder: string, prefix = ''): Promise<string[]> => {
