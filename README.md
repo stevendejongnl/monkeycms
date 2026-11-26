@@ -134,6 +134,15 @@ monkeycms build            # runs the build script of the project
 
 `serve` uses the `dist` folder of the project when it has one, and the built files of MonkeyCMS when it does not. The sample config from `init` talks to the public JSONPlaceholder API, so it runs as it is.
 
+### Demo
+
+```
+npm run demo                  # the rest-array example on http://127.0.0.1:8080/
+npm run demo -- jsonapi -p 9000
+```
+
+`npm run demo` runs MonkeyCMS against the mock API of one example in `examples/`: `rest-array` (default), `envelope`, `jsonapi`, `cursor` or `wordpress`. The page, the built files and the mock API share one origin. Data lives in memory and resets when you stop the server. The WordPress example asks for a sign-in: use any username and password. `examples/demo.spec.ts` tests the whole flow in a browser.
+
 ### Out of scope
 
 - A server, database or file storage. Bring your own API.
@@ -153,6 +162,7 @@ npm run build        # bundles src/ into dist/ and compiles the CLI in bin/
 npm run typecheck    # strict TypeScript check
 npm test             # typecheck, build, unit tests (node:test), component tests (Playwright)
 npm run serve        # build, then serve http://127.0.0.1:8080/public/index.html
+npm run demo         # build, then run the app against a mock API of examples/
 ```
 
 Run the component tests for one browser with `npx playwright test --project=chromium`. Install the browsers first with `npx playwright install`.
