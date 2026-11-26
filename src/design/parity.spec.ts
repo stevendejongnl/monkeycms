@@ -73,6 +73,24 @@ const measure = (locator: Locator): Promise<Measured> => locator.evaluate((eleme
 }, PROPERTIES)
 
 test.describe('shell', () => {
+    test('the size of the text', async ({ page }) => {
+        await design(page, 'shell')
+        const wanted = await measure(page.getByRole('link', { name: 'Pages' }))
+        await app(page, '#/posts')
+        const found = await measure(page.locator('monkey-sidebar').getByRole('link', { name: /Pages/ }))
+
+        expect(found.fontSize).toBe(wanted.fontSize)
+    })
+
+    test('the icon of an item of the menu', async ({ page }) => {
+        await design(page, 'shell')
+        const wanted = await measure(page.getByRole('link', { name: 'Pages' }).locator('svg'))
+        await app(page, '#/posts')
+        const found = await measure(page.locator('monkey-sidebar').getByRole('link', { name: /Pages/ }).locator('svg'))
+
+        expect(found).toMatchObject({ width: wanted.width, height: wanted.height })
+    })
+
     test('the sidebar', async ({ page }) => {
         await design(page, 'shell')
         const wanted = await measure(page.locator('aside'))

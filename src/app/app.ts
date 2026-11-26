@@ -29,6 +29,7 @@ export class MonkeyApp extends LitElement {
     static override styles = [linkStyles, css`
         :host {
             display: block;
+            font-size: 0.9375rem;
         }
 
         .shell {
@@ -115,7 +116,7 @@ export class MonkeyApp extends LitElement {
 
     private sidebar(config: NonNullable<ReturnType<typeof getConfig>>): unknown {
         const active = this.route.view === 'settings' ? SETTINGS : 'collection' in this.route ? this.route.collection : ''
-        const items = Object.entries(config.collections).map(([name, collection]) => ({ name, label: collection.label ?? name }))
+        const items = Object.entries(config.collections).map(([name, collection]) => ({ name, label: collection.label ?? name, icon: collection.icon }))
 
         return html`
             <monkey-sidebar
