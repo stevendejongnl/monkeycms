@@ -80,7 +80,26 @@ const selectOptions: Rule = (config) =>
                     message: type === 'select' ? 'is required for a select field' : 'is only allowed for a select field',
                 }]))
 
-const rules: readonly Rule[] = [baseUrl, pathSyntax, entryPaths, selectOptions]
+// The status field must be a select field, and the value of Publish one of its choices.
+const statusField: Rule = (config) =>
+    collectionsOf(config).flatMap(([name, { fields, status }]) => {
+        const field = status === undefined ? undefined : fields[status.field]
+        const where = `collections.${name}.status`
+
+        if (status === undefined) {
+            return []
+        }
+
+        if (field?.type !== 'select') {
+            return [{ path: `${where}.field`, message: 'must name a select field of the collection' }]
+        }
+
+        return status.publish === undefined || field.options?.includes(status.publish)
+            ? []
+            : [{ path: `${where}.publish`, message: 'must be one of the options of the status field' }]
+    })
+
+const rules: readonly Rule[] = [baseUrl, pathSyntax, entryPaths, selectOptions, statusField]
 
 // Checks the config against the published schema first. The other rules need a config
 // of the right shape, so they run only when the schema check passes.

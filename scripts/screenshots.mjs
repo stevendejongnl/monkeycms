@@ -29,6 +29,7 @@ const config = (auth) => ({
         readingTime: { type: 'number', label: 'Reading time (minutes)' },
         body: { type: 'longtext', label: 'Body' },
       },
+      status: { field: 'status', param: 'status', publish: 'published' },
       list: { path: '/posts', itemsPath: 'data', totalPath: 'total', searchParam: 'q' },
       get: { path: '/posts/{id}', itemPath: 'data' },
       create: { path: '/posts', itemPath: 'data' },
@@ -67,6 +68,17 @@ const screens = {
   list: async (page) => {
     await open(page, '#/posts', { type: 'none' })
     await page.getByRole('cell', { name: 'Coffee tasting night', exact: true }).waitFor()
+  },
+  'list-cards': async (page) => {
+    await open(page, '#/posts', { type: 'none' })
+    await page.getByRole('button', { name: 'Cards' }).click()
+    await page.getByText('Coffee tasting night').waitFor()
+  },
+  'list-selected': async (page) => {
+    await open(page, '#/posts', { type: 'none' })
+    await page.getByRole('checkbox', { name: 'Select A new spring menu' }).check()
+    await page.getByRole('checkbox', { name: 'Select Coffee tasting night' }).check()
+    await page.getByText('2 selected').waitFor()
   },
   editor: async (page) => {
     await open(page, '#/posts/new', { type: 'none' })

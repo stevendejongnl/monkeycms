@@ -573,6 +573,27 @@
             "$ref": "#/$defs/field"
           }
         },
+        "status": {
+          "type": "object",
+          "required": [
+            "field"
+          ],
+          "additionalProperties": false,
+          "description": "Which select field holds the status. Gives the list status tabs (with param) and a bulk Publish (with publish).",
+          "properties": {
+            "field": {
+              "type": "string",
+              "minLength": 1
+            },
+            "param": {
+              "$ref": "#/$defs/queryParam"
+            },
+            "publish": {
+              "type": "string",
+              "minLength": 1
+            }
+          }
+        },
         "list": {
           "$ref": "#/$defs/listEndpoint"
         },

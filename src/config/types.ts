@@ -120,11 +120,22 @@ export interface ItemEndpointConfig extends EndpointConfig {
 
 export interface DeleteEndpointConfig extends EndpointConfig {}
 
+// Which field of a collection holds its status, for the tabs and the bulk Publish of the list.
+export interface StatusConfig {
+    // A select field of the collection.
+    readonly field: string
+    // The query parameter of the list endpoint that filters by status. Without it there are no tabs.
+    readonly param?: string
+    // The value that bulk Publish writes to the field. Without it there is no Publish button.
+    readonly publish?: string
+}
+
 export interface CollectionConfig {
     readonly label?: string
     // Path of the id in one API item. Defaults to "id".
     readonly idPath?: string
     readonly fields: Readonly<Record<string, FieldConfig>>
+    readonly status?: StatusConfig
     readonly list: ListEndpointConfig
     readonly get?: ItemEndpointConfig
     readonly create?: ItemEndpointConfig

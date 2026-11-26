@@ -110,7 +110,7 @@ export const createClient = (config: MonkeyConfig, options: ClientOptions = {}):
         })
 
     return {
-        list: (collection, { page = firstPage, vars, search = '', signal } = {}) =>
+        list: (collection, { page = firstPage, vars, search = '', status = '', signal } = {}) =>
             toResult<ListPage>(async () => {
                 const found = collectionOf(config, collection)
                 const pagination = paginationOf(config, found)
@@ -120,6 +120,7 @@ export const createClient = (config: MonkeyConfig, options: ClientOptions = {}):
                     extraQuery: {
                         ...pageQuery(pagination, page),
                         ...(found.list.searchParam === undefined || search.trim() === '' ? {} : { [found.list.searchParam]: search.trim() }),
+                        ...(found.status?.param === undefined || status === '' ? {} : { [found.status.param]: status }),
                     },
                     ...(vars === undefined ? {} : { vars: { ...vars } }),
                     ...(page.url === undefined ? {} : { pageUrl: page.url }),

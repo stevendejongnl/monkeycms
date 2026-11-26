@@ -97,6 +97,26 @@ describe('API style: JSON:API with page and limit', () => {
         assert.equal(new URL(calls[1]?.url ?? '').searchParams.has('q'), false)
     })
 
+    it('should send a status in the status parameter, and only when it is set', async () => {
+        const config: MonkeyConfig = { ...blogConfig, collections: { posts: { ...blogConfig.collections['posts']!, status: { field: 'status', param: 'filter[status]' } } } }
+        const { fetcher, calls } = fake(() => json({ data: [], meta: { total: 0 } }))
+        const client = createClient(config, { fetch: fetcher })
+
+        await client.list('posts', { status: 'draft' })
+        await client.list('posts', { status: '' })
+
+        assert.equal(new URL(calls[0]?.url ?? '').searchParams.get('filter[status]'), 'draft')
+        assert.equal(new URL(calls[1]?.url ?? '').searchParams.has('filter[status]'), false)
+    })
+
+    it('should not send a status to a collection that has no status parameter', async () => {
+        const { client, calls } = clientFor(() => json({ data: [], meta: { total: 0 } }))
+
+        await client.list('posts', { status: 'draft' })
+
+        assert.equal(new URL(calls[0]?.url ?? '').search.includes('draft'), false)
+    })
+
     it('should not send a search term to a collection that has no search parameter', async () => {
         const { client, calls } = clientFor(() => json({ data: [], meta: { total: 0 } }))
 

@@ -144,6 +144,19 @@ describe('validateConfig', () => {
         ])
     })
 
+    it('should accept a status of a select field, and refuse another one', () => {
+        assert.deepEqual(issuesOf(changed((c) => { c.collections.posts.status = { field: 'status', param: 'filter[status]', publish: 'published' } })), [])
+        assert.deepEqual(issuesOf(changed((c) => { c.collections.posts.status = { field: 'title' } })), [
+            'collections.posts.status.field|must name a select field of the collection',
+        ])
+        assert.deepEqual(issuesOf(changed((c) => { c.collections.posts.status = { field: 'missing' } })), [
+            'collections.posts.status.field|must name a select field of the collection',
+        ])
+        assert.deepEqual(issuesOf(changed((c) => { c.collections.posts.status = { field: 'status', publish: 'live' } })), [
+            'collections.posts.status.publish|must be one of the options of the status field',
+        ])
+    })
+
     it('should accept a search parameter and refuse a bad one', () => {
         assert.deepEqual(issuesOf(changed((c) => { c.collections.posts.list.searchParam = 'q' })), [])
         assert.deepEqual(issuesOf(changed((c) => { c.collections.posts.list.searchParam = 'filter[title]' })), [])
