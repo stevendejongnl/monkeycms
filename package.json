@@ -12,13 +12,13 @@
   },
   "scripts": {
     "clean": "node -e \"for (const d of ['dist', 'bin/dist']) fs.rmSync(d, { recursive: true, force: true })\"",
-    "build": "npm run clean && node scripts/build.mjs && tsc -p bin",
+    "build": "npm run clean && node scripts/build.mjs && tsc -p bin/tsconfig.build.json",
     "typecheck": "tsc --noEmit && tsc --noEmit -p bin",
     "pretest": "npm run typecheck && npm run build",
     "test": "npm run test:unit && npm run test:components",
-    "test:unit": "node --test \"src/**/*.test.ts\"",
+    "test:unit": "node --test \"src/**/*.test.ts\" \"bin/src/**/*.test.ts\"",
     "test:components": "playwright test",
-    "serve": "npm run build && node scripts/static-server.mjs",
+    "serve": "npm run build && node bin/dist/cli.js serve",
     "screenshots": "node scripts/screenshots.mjs . docs/screenshots/latest"
   },
   "keywords": [],

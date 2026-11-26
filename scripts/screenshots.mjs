@@ -85,7 +85,7 @@ const screens = {
   },
 }
 
-const server = spawn('node', [join(root, 'scripts/static-server.mjs')], { env: { ...process.env, PORT: String(port) }, stdio: 'ignore' })
+const server = spawn('node', [join(import.meta.dirname, '../bin/dist/cli.js'), 'serve', '--port', String(port)], { cwd: root, stdio: 'ignore' })
 
 try {
   await mkdir(out, { recursive: true })

@@ -7,12 +7,13 @@ export const help = `
 
     Commands
     help    [h]   Display help
-    serve   [s]   Start the server
+    serve   [s]   Serve the public and dist folders
     build   [b]   Build the project
     test    [t]   Test the project
     publish [p]   Publish the project
 
     Options
+    --port,    -p   Port for serve (default 8080)
     --help,    -h   Display help
     --version, -v   Display the version
 `
@@ -28,5 +29,6 @@ export const parse = () => parseArgs({
     options: {
         help: { type: 'boolean', short: 'h' },
         version: { type: 'boolean', short: 'v' },
+        port: { type: 'string', short: 'p' },
     },
 })

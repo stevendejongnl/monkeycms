@@ -7,8 +7,7 @@ export default defineConfig({
   testMatch: '**/*.spec.ts',
   use: { baseURL: `http://127.0.0.1:${port}` },
   webServer: {
-    command: 'node scripts/static-server.mjs',
-    env: { PORT: String(port) },
+    command: `node bin/dist/cli.js serve --port ${port}`,
     url: `http://127.0.0.1:${port}/public/index.html`,
     reuseExistingServer: !process.env.CI,
   },
