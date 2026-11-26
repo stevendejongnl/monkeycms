@@ -137,6 +137,7 @@ A small config. The full list of keys is in `src/config/monkeycms.schema.json`, 
 | `idPath` | Where the id is in one API item. Default `id`. |
 | `fields` | The fields, by name. |
 | `status` | Optional. Names the select field that holds the status, for the status tabs and the bulk Publish. See below. |
+| `preview` | Optional. `{ "fields": ["title", "body"] }` adds a Preview button to each entry. It opens a side drawer that shows these fields, a long text in full. Escape, the Close button and a click outside close it. |
 | `list` | Required. The other four are optional. A screen only offers what you describe: no `create` means no New button, no `delete` means no Delete button. |
 | `get`, `create`, `update`, `delete` | Endpoints. |
 

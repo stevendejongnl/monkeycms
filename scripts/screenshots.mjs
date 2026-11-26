@@ -30,6 +30,7 @@ const config = (auth) => ({
         body: { type: 'longtext', label: 'Body' },
       },
       status: { field: 'status', param: 'status', publish: 'published' },
+      preview: { fields: ['title', 'status', 'readingTime', 'body'] },
       list: { path: '/posts', itemsPath: 'data', totalPath: 'total', searchParam: 'q' },
       get: { path: '/posts/{id}', itemPath: 'data' },
       create: { path: '/posts', itemPath: 'data' },
@@ -42,7 +43,7 @@ const config = (auth) => ({
 
 const posts = [
   { id: 1, title: 'Opening hours over the holidays', status: 'published', readingTime: 3 },
-  { id: 2, title: 'A new spring menu', status: 'draft', readingTime: 5 },
+  { id: 2, title: 'A new spring menu', status: 'draft', readingTime: 5, body: 'Asparagus, wild garlic and rhubarb arrive in April.\nThe menu changes every two weeks.' },
   { id: 3, title: 'Coffee tasting night', status: 'published', readingTime: 2 },
 ]
 
@@ -68,6 +69,13 @@ const screens = {
   list: async (page) => {
     await open(page, '#/posts', { type: 'none' })
     await page.getByRole('cell', { name: 'Coffee tasting night', exact: true }).waitFor()
+  },
+  'list-preview': async (page) => {
+    // The scrim and the drawer fill the viewport, so make the viewport as tall as the page.
+    await page.setViewportSize({ width: 1100, height: 760 })
+    await open(page, '#/posts', { type: 'none' })
+    await page.getByRole('button', { name: 'Preview A new spring menu' }).click()
+    await page.getByRole('dialog').waitFor()
   },
   'list-cards': async (page) => {
     await open(page, '#/posts', { type: 'none' })

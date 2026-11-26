@@ -130,12 +130,19 @@ export interface StatusConfig {
     readonly publish?: string
 }
 
+// The side drawer that shows one entry of the list.
+export interface PreviewConfig {
+    // Names of fields of the collection, in the order to show them. A long text shows in full.
+    readonly fields: readonly string[]
+}
+
 export interface CollectionConfig {
     readonly label?: string
     // Path of the id in one API item. Defaults to "id".
     readonly idPath?: string
     readonly fields: Readonly<Record<string, FieldConfig>>
     readonly status?: StatusConfig
+    readonly preview?: PreviewConfig
     readonly list: ListEndpointConfig
     readonly get?: ItemEndpointConfig
     readonly create?: ItemEndpointConfig

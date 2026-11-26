@@ -99,7 +99,15 @@ const statusField: Rule = (config) =>
             : [{ path: `${where}.publish`, message: 'must be one of the options of the status field' }]
     })
 
-const rules: readonly Rule[] = [baseUrl, pathSyntax, entryPaths, selectOptions, statusField]
+// Every field in the preview must be a field of the collection.
+const previewFields: Rule = (config) =>
+    collectionsOf(config).flatMap(([name, { fields, preview }]) =>
+        (preview?.fields ?? [])
+            .map((field, index) => ({ field, index }))
+            .filter(({ field }) => fields[field] === undefined)
+            .map(({ index }) => ({ path: `collections.${name}.preview.fields[${index}]`, message: 'must name a field of the collection' })))
+
+const rules: readonly Rule[] = [baseUrl, pathSyntax, entryPaths, selectOptions, statusField, previewFields]
 
 // Checks the config against the published schema first. The other rules need a config
 // of the right shape, so they run only when the schema check passes.
