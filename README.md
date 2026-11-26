@@ -56,6 +56,22 @@ The config says:
 
 The config format is described by `src/config/monkeycms.schema.json`.
 
+### Examples
+
+`examples/` has a complete config and a mock API for five common API styles. The tests run every config against its mock API: list every page, search, get, create, update, delete and an error answer.
+
+| Folder | API style | Pagination |
+|--------|-----------|------------|
+| `examples/rest-array` | Plain REST, a JSON array, errors with a message per field | page and limit, no total |
+| `examples/envelope` | `data` and `meta.total`, errors in `error.fields` | page and limit, with total |
+| `examples/jsonapi` | JSON:API: `attributes`, `data.type`, `page[number]`, `filter[title]` | page and size, with total |
+| `examples/cursor` | `items` and an opaque `next_cursor` | cursor |
+| `examples/wordpress` | WordPress REST: `{ raw, rendered }` fields, application password | `Link` header |
+
+A mock API is one function from request to response (`examples/mock/mock.ts`), so it runs in a test through a fake fetch and can run behind a real server.
+
+JSON:API reports an error per field as an array with a `source.pointer`. The mapping cannot read that yet, so that example shows the message of the first error only.
+
 ### Authentication
 
 The `auth` block says how to sign in. It never holds a secret. The person enters the credentials at runtime.

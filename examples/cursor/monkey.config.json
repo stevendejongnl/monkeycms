@@ -1,0 +1,22 @@
+{
+  "configVersion": 1,
+  "baseUrl": "https://cursor.example.com/v1",
+  "auth": { "type": "none" },
+  "pagination": { "type": "cursor", "cursorParam": "cursor", "nextCursorPath": "next_cursor", "limitParam": "limit", "pageSize": 10 },
+  "errors": { "messagePath": "error" },
+  "collections": {
+    "posts": {
+      "label": "Posts",
+      "fields": {
+        "title": { "type": "text", "label": "Title", "required": true },
+        "body": { "type": "longtext", "label": "Body" },
+        "status": { "type": "select", "label": "Status", "options": ["draft", "published"] }
+      },
+      "list": { "path": "/posts", "itemsPath": "items", "searchParam": "q" },
+      "get": { "path": "/posts/{id}" },
+      "create": { "path": "/posts" },
+      "update": { "method": "PATCH", "path": "/posts/{id}" },
+      "delete": { "path": "/posts/{id}" }
+    }
+  }
+}

@@ -486,7 +486,7 @@
           "$ref": "#/$defs/pagination"
         },
         "searchParam": {
-          "$ref": "#/$defs/fieldName"
+          "$ref": "#/$defs/queryParam"
         }
       }
     },
@@ -591,6 +591,11 @@
     "fieldName": {
       "type": "string",
       "pattern": "^[A-Za-z0-9_.-]+$"
+    },
+    "queryParam": {
+      "type": "string",
+      "pattern": "^[A-Za-z0-9_.$\\[\\]-]+$",
+      "description": "The name of a query parameter. Brackets are allowed, for filter[title] as JSON:API and Rails write it."
     },
     "loginMethod": {
       "enum": [

@@ -1,0 +1,22 @@
+{
+  "configVersion": 1,
+  "baseUrl": "https://wp.example.com/wp-json/wp/v2",
+  "auth": { "type": "basic" },
+  "pagination": { "type": "link-header", "pageSize": 10, "limitParam": "per_page" },
+  "errors": { "messagePath": "message", "fieldErrorsPath": "data.params" },
+  "collections": {
+    "posts": {
+      "label": "Posts",
+      "fields": {
+        "title": { "type": "text", "label": "Title", "required": true, "path": "title.raw" },
+        "content": { "type": "longtext", "label": "Content", "path": "content.raw" },
+        "status": { "type": "select", "label": "Status", "options": ["publish", "draft"] }
+      },
+      "list": { "path": "/posts", "query": { "context": "edit" }, "searchParam": "search" },
+      "get": { "path": "/posts/{id}", "query": { "context": "edit" } },
+      "create": { "path": "/posts" },
+      "update": { "method": "POST", "path": "/posts/{id}" },
+      "delete": { "path": "/posts/{id}", "query": { "force": "true" } }
+    }
+  }
+}
