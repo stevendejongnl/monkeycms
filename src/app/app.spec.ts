@@ -24,6 +24,7 @@ const config = (auth: object = { type: 'none' }) => ({
                 body: { type: 'longtext', label: 'Body' },
             },
             status: { field: 'status', param: 'status', publish: 'published' },
+            preview: { fields: ['title', 'status', 'body'] },
             list: { path: '/posts', itemsPath: 'data', totalPath: 'total', searchParam: 'q' },
             get: { path: '/posts/{id}', itemPath: 'data' },
             create: { path: '/posts', itemPath: 'data' },
@@ -246,6 +247,48 @@ test.describe('collection list', () => {
         await expect(app(page).getByRole('cell', { name: 'Third thing', exact: true })).toBeVisible()
         await expect(app(page).getByRole('cell', { name: 'First post', exact: true })).toHaveCount(0)
         expect(requests.filter((request) => request.startsWith('DELETE'))).toEqual(['DELETE /posts/1', 'DELETE /posts/2'])
+    })
+
+    test('should show the entry in a drawer, and close it with Escape, the button and the scrim', async ({ page }) => {
+        await serve(page, threePosts())
+        await open(page, '#/posts')
+        await app(page).getByRole('button', { name: 'Preview First post' }).click()
+
+        const drawer = app(page).getByRole('dialog', { name: 'Preview First post' })
+
+        await expect(drawer).toBeVisible()
+        await expect(drawer.getByText('long text one')).toBeVisible()
+        await expect(drawer.getByRole('link', { name: 'Edit' })).toHaveAttribute('href', '#/posts/1')
+
+        await page.keyboard.press('Escape')
+
+        await expect(drawer).toHaveCount(0)
+        await expect(app(page).getByRole('button', { name: 'Preview First post' })).toBeFocused()
+
+        await app(page).getByRole('button', { name: 'Preview Second post' }).click()
+
+        const second = app(page).getByRole('dialog', { name: 'Preview Second post' })
+
+        await second.getByRole('button', { name: 'Close' }).click()
+
+        await expect(second).toHaveCount(0)
+
+        await app(page).getByRole('button', { name: 'Preview First post' }).click()
+        await page.mouse.click(5, 300)
+
+        await expect(drawer).toHaveCount(0)
+    })
+
+    test('should keep the page behind the drawer out of the tab order', async ({ page }) => {
+        await serve(page, threePosts())
+        await open(page, '#/posts')
+        await app(page).getByRole('button', { name: 'Preview First post' }).click()
+        await expect(app(page).getByRole('dialog')).toBeVisible()
+
+        for (let step = 0; step < 6; step++) {
+            await page.keyboard.press('Tab')
+            await expect(app(page).locator('table :focus, nav[aria-label="Collections"] :focus')).toHaveCount(0)
+        }
     })
 
     test('should say when the API fails', async ({ page }) => {

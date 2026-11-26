@@ -157,6 +157,14 @@ describe('validateConfig', () => {
         ])
     })
 
+    it('should accept preview fields of the collection, and refuse others', () => {
+        assert.deepEqual(issuesOf(changed((c) => { c.collections.posts.preview = { fields: ['title', 'body'] } })), [])
+        assert.deepEqual(issuesOf(changed((c) => { c.collections.posts.preview = { fields: ['title', 'nope'] } })), [
+            'collections.posts.preview.fields[1]|must name a field of the collection',
+        ])
+        assert.equal(issuesOf(changed((c) => { c.collections.posts.preview = { fields: [] } })).length, 1)
+    })
+
     it('should accept a search parameter and refuse a bad one', () => {
         assert.deepEqual(issuesOf(changed((c) => { c.collections.posts.list.searchParam = 'q' })), [])
         assert.deepEqual(issuesOf(changed((c) => { c.collections.posts.list.searchParam = 'filter[title]' })), [])

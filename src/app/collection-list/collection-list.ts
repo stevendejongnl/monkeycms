@@ -207,6 +207,50 @@ export class MonkeyCollectionList extends LitElement {
             margin: 0;
         }
 
+        dialog {
+            box-sizing: border-box;
+            inline-size: min(50vw, 100%);
+            min-inline-size: min(28rem, 100%);
+            max-inline-size: 100%;
+            block-size: 100%;
+            max-block-size: 100%;
+            margin: 0;
+            margin-inline-start: auto;
+            padding: calc(var(--monkey-padding) * 1.5);
+            overflow-y: auto;
+            color: var(--monkey-color);
+            background: var(--monkey-surface-color);
+            border: 0;
+            border-inline-start: 1px solid var(--monkey-border-color);
+        }
+
+        dialog::backdrop {
+            background: color-mix(in oklab, black 45%, transparent);
+        }
+
+        dialog h3 {
+            margin: 0;
+            font-size: 1.5rem;
+        }
+
+        dialog dl {
+            display: grid;
+            gap: 1rem;
+            margin: var(--monkey-gap) 0;
+        }
+
+        dialog dt {
+            color: var(--monkey-muted-color);
+            font-size: 0.8125rem;
+            letter-spacing: 0.06em;
+            text-transform: uppercase;
+        }
+
+        dialog dd {
+            margin: 0.25rem 0 0;
+            white-space: pre-wrap;
+        }
+
         .visually-hidden {
             position: absolute;
             inline-size: 1px;
@@ -237,6 +281,7 @@ export class MonkeyCollectionList extends LitElement {
     @state() private status = ''
     @state() private selected: ReadonlySet<string> = new Set()
     @state() private confirmingBulk = false
+    @state() private previewing: Entry | undefined
 
     private cancel: AbortController | undefined
 
@@ -254,8 +299,19 @@ export class MonkeyCollectionList extends LitElement {
             this.confirming = undefined
             this.view = savedView(this.collection)
             this.status = ''
+            this.previewing = undefined
             this.clearSelection()
             void this.load()
+        }
+    }
+
+    // The dialog is drawn closed. Open it as a modal, which traps the focus, closes on Escape
+    // and puts the focus back on the button that opened it.
+    protected override updated(): void {
+        const dialog = this.renderRoot.querySelector('dialog')
+
+        if (dialog !== null && !dialog.open) {
+            dialog.showModal()
         }
     }
 
@@ -408,6 +464,7 @@ export class MonkeyCollectionList extends LitElement {
 
         return html`
                 <div class="actions">
+                    ${collection.preview === undefined ? nothing : html`<button type="button" aria-label=${`Preview ${label}`} @click=${() => { this.previewing = this.page?.items.find((item) => item.id === id) }}>Preview</button>`}
                     ${collection.get !== undefined || collection.update !== undefined
                         ? html`<a class="button" href=${route} aria-label=${`Edit ${label}`}>Edit</a>`
                         : nothing}
@@ -481,6 +538,26 @@ export class MonkeyCollectionList extends LitElement {
             : this.view === 'cards' ? this.cards(collection, page) : this.table(collection, page)
     }
 
+    private drawer(collection: CollectionConfig, entry: Entry): unknown {
+        const route = hrefOf({ view: 'edit', collection: this.collection, id: entry.id })
+
+        return html`
+            <dialog aria-label=${`Preview ${this.labelOf(entry)}`}
+                @close=${() => { this.previewing = undefined }}
+                @click=${(event: Event) => { event.target === event.currentTarget && (event.currentTarget as HTMLDialogElement).close() }}>
+                <h3>${this.labelOf(entry)}</h3>
+                <dl>
+                    ${(collection.preview?.fields ?? []).map((name) => html`
+                        <dt>${collection.fields[name]?.label ?? name}</dt>
+                        <dd>${this.cell(name, entry.values[name], collection)}</dd>`)}
+                </dl>
+                <div class="actions">
+                    ${collection.get !== undefined || collection.update !== undefined ? html`<a class="button primary" href=${route}>Edit</a>` : nothing}
+                    <button type="button" @click=${(event: Event) => (event.target as HTMLElement).closest('dialog')?.close()}>Close</button>
+                </div>
+            </dialog>`
+    }
+
     private tools(collection: CollectionConfig): unknown {
         const status = collection.status
         const options = status === undefined ? undefined : collection.fields[status.field]?.options
@@ -540,6 +617,7 @@ export class MonkeyCollectionList extends LitElement {
             ${this.bulkBar(collection)}
             ${this.message === '' ? nothing : html`<p role="alert">${this.message}</p>`}
             ${this.loading ? html`<p role="status">Loading…</p>` : nothing}
+            ${this.previewing === undefined ? nothing : this.drawer(collection, this.previewing)}
             ${this.page === undefined ? nothing : html`${this.entries(collection, this.page)}${this.pager(this.page)}`}`
     }
 }
