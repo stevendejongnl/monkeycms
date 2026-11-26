@@ -57,7 +57,7 @@ export class MonkeyCollectionList extends LitElement {
 
         h2 {
             margin: 0;
-            font-size: 2rem;
+            font-size: 2.125rem;
             line-height: 1.15;
             letter-spacing: -0.02em;
         }
