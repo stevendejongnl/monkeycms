@@ -18,9 +18,12 @@ const config = (auth: object = { type: 'none' }) => ({
     collections: {
         posts: {
             label: 'Posts',
-            fields: { title: { type: 'text', label: 'Title' } },
-            list: { path: '/posts', itemsPath: 'data' },
+            fields: { title: { type: 'text', label: 'Title' }, status: { type: 'select', options: ['draft', 'published'] } },
+            status: { field: 'status', param: 'status', publish: 'published' },
+            list: { path: '/posts', itemsPath: 'data', totalPath: 'total', searchParam: 'q' },
             create: { path: '/posts', itemPath: 'data' },
+            update: { path: '/posts/{id}', itemPath: 'data' },
+            delete: { path: '/posts/{id}' },
         },
         pages: { label: 'Pages', fields: { title: { type: 'text' } }, list: { path: '/pages', itemsPath: 'data' } },
     },
@@ -34,7 +37,7 @@ const design = async (page: Page, name: string): Promise<void> => {
 
 const app = async (page: Page, hash: string, auth?: object): Promise<void> => {
     await page.setViewportSize({ width: 1440, height: 1000 })
-    await page.route('https://api.example.com/**', (route) => route.fulfill({ json: { data: [{ id: 1, title: 'Opening hours' }] } }))
+    await page.route('https://api.example.com/**', (route) => route.fulfill({ json: { data: [{ id: 1, title: 'Opening hours', status: 'published' }, { id: 2, title: 'New lunch menu', status: 'draft' }], total: 2 } }))
     await page.goto(`/public/index.html${hash}`)
     await page.evaluate((json) => {
         const setUp = document.createElement('monkey-set-up')
@@ -125,6 +128,62 @@ test.describe('list', () => {
         const found = await measure(page.getByRole('link', { name: /^New/ }))
 
         expect(found).toMatchObject({ height: wanted.height, borderRadius: wanted.borderRadius, fontWeight: wanted.fontWeight, backgroundColor: wanted.backgroundColor })
+    })
+})
+
+test.describe('list, in detail', () => {
+    const both = async (page: Page, wantedLocator: (page: Page) => Locator, foundLocator: (page: Page) => Locator): Promise<[Measured, Measured]> => {
+        await design(page, 'list')
+        const wanted = await measure(wantedLocator(page))
+        await app(page, '#/posts')
+        await page.getByRole('checkbox', { name: /^Select (?!all)/ }).first().check()
+        await page.getByRole('checkbox', { name: /^Select (?!all)/ }).last().check()
+
+        return [wanted, await measure(foundLocator(page))]
+    }
+
+    test('the search', async ({ page }) => {
+        const [wanted, found] = await both(page, (p) => p.locator('label:has(input[type=search])'), (p) => p.getByRole('search'))
+
+        expect(found).toMatchObject({ height: wanted.height, borderRadius: wanted.borderRadius, backgroundColor: wanted.backgroundColor })
+    })
+
+    test('the filter by status', async ({ page }) => {
+        const [wanted, found] = await both(page, (p) => p.getByRole('tablist'), (p) => p.getByRole('group', { name: 'Status' }))
+
+        expect(found).toMatchObject({ height: wanted.height, borderRadius: wanted.borderRadius, backgroundColor: wanted.backgroundColor })
+    })
+
+    test('the switch between table and cards', async ({ page }) => {
+        const [wanted, found] = await both(page, (p) => p.getByRole('group', { name: 'View' }), (p) => p.getByRole('group', { name: 'View' }))
+
+        expect(found).toMatchObject({ width: wanted.width, height: wanted.height, borderRadius: wanted.borderRadius })
+    })
+
+    test('the bar of the selected entries', async ({ page }) => {
+        const [wanted, found] = await both(page, (p) => p.getByRole('status').filter({ hasText: '2 selected' }), (p) => p.getByRole('region', { name: 'Bulk actions' }))
+
+        expect(found).toMatchObject({ height: wanted.height, borderRadius: wanted.borderRadius, backgroundColor: wanted.backgroundColor, paddingLeft: wanted.paddingLeft })
+    })
+
+    test('the header of the table', async ({ page }) => {
+        const [wanted, found] = await both(page, (p) => p.getByRole('columnheader', { name: 'Title' }), (p) => p.getByRole('columnheader', { name: 'Title' }))
+
+        // The app has a select-all box in the header row that the design does not show: 1px more.
+        expect(Math.abs(found.height - wanted.height)).toBeLessThanOrEqual(1)
+        expect(found).toMatchObject({ fontSize: wanted.fontSize, color: wanted.color, paddingLeft: wanted.paddingLeft })
+    })
+
+    test('a row of the table', async ({ page }) => {
+        const [wanted, found] = await both(page, (p) => p.getByRole('row').nth(1), (p) => p.getByRole('row').nth(1))
+
+        expect(found.height).toBe(wanted.height)
+    })
+
+    test('the buttons below the table', async ({ page }) => {
+        const [wanted, found] = await both(page, (p) => p.getByRole('button', { name: 'Previous' }), (p) => p.getByRole('button', { name: 'Previous' }))
+
+        expect(found).toMatchObject({ height: wanted.height, borderRadius: wanted.borderRadius, fontWeight: wanted.fontWeight, paddingLeft: wanted.paddingLeft })
     })
 })
 

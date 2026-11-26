@@ -55,123 +55,215 @@ export class MonkeyCollectionList extends LitElement {
             align-items: center;
         }
 
-        h2 {
-            margin: 0;
+        .title {
+            display: grid;
+            line-height: 1.2;
+        }
+
+        .eyebrow {
+            font-size: 0.8125rem;
+            font-weight: 600;
+            letter-spacing: 0.06em;
+            text-transform: uppercase;
+            color: var(--monkey-muted-color);
+        }
+
+        h1 {
+            margin: 0.25rem 0 0;
             font-size: 2.125rem;
             line-height: 1.15;
             letter-spacing: -0.02em;
         }
 
-        form {
-            display: grid;
-            grid-template-columns: minmax(0, 24rem) auto;
-            justify-content: start;
-            gap: 0.75rem;
-            align-items: end;
-        }
-
-        form label {
-            display: grid;
-            gap: var(--monkey-field-gap);
-            font-weight: 600;
-        }
-
-        nav {
-            display: grid;
+        header a.button {
+            display: inline-grid;
             grid-auto-flow: column;
-            justify-content: start;
+            gap: 0.5rem;
+            min-block-size: 3rem;
+            padding: 0 1.375rem;
+        }
+
+        svg {
+            flex: none;
+            inline-size: 1.125rem;
+            block-size: 1.125rem;
+        }
+
+        .toolbar {
+            display: grid;
+            grid-template-columns: auto minmax(11.25rem, 1fr) auto;
             gap: 0.75rem;
             align-items: center;
+        }
+
+        .tabs, .views {
+            display: grid;
+            grid-auto-flow: column;
+            gap: 0.25rem;
+            padding: 0.25rem;
+            background: var(--monkey-surface-color);
+            border: 1px solid var(--monkey-border-color);
+            border-radius: 999px;
+        }
+
+        .tabs button, .views button {
+            min-block-size: 2.5rem;
+            padding: 0 1rem;
+            color: var(--monkey-color);
+            background: none;
+            border: 0;
+        }
+
+        .views button {
+            padding: 0;
+            inline-size: 2.75rem;
+        }
+
+        .views svg {
+            inline-size: 1.25rem;
+            block-size: 1.25rem;
+        }
+
+        .tabs button[aria-pressed='true'], .views button[aria-pressed='true'] {
+            color: var(--monkey-accent-contrast-color);
+            background: var(--monkey-accent-color);
+        }
+
+        .search {
+            display: grid;
+            grid-template-columns: 2.75rem 1fr;
+            align-items: center;
+            min-block-size: 3rem;
             color: var(--monkey-muted-color);
+            background: var(--monkey-surface-color);
+            border: 1px solid var(--monkey-control-border-color);
+            border-radius: 999px;
+        }
+
+        .search:focus-within {
+            outline: 3px solid var(--monkey-link-color);
+            outline-offset: 2px;
+        }
+
+        .search span {
+            display: grid;
+            place-items: center;
+        }
+
+        .search input {
+            min-inline-size: 0;
+            min-block-size: 0;
+            padding: 0 1rem 0 0;
+            background: none;
+            border: 0;
+            outline: 0;
         }
 
         .table {
             overflow-x: auto;
             background: var(--monkey-surface-color);
             border: 1px solid var(--monkey-border-color);
-            border-radius: calc(var(--monkey-radius) + 0.5rem);
+            border-radius: calc(var(--monkey-radius) + 0.375rem);
         }
 
         table {
             border-collapse: collapse;
             inline-size: 100%;
+            min-inline-size: 40rem;
         }
 
         th, td {
             text-align: start;
-            padding: var(--monkey-padding) 1.125rem;
-        }
-
-        tbody tr + tr :is(th, td) {
-            border-block-start: 1px solid var(--monkey-border-color);
+            padding: 0.5rem 0.75rem;
+            border-block-end: 1px solid var(--monkey-border-color);
         }
 
         th {
+            padding-block: 0;
             font-size: 0.8125rem;
-            letter-spacing: 0.06em;
-            text-transform: uppercase;
+            line-height: 1.5;
             color: var(--monkey-muted-color);
-            border-block-end: 1px solid var(--monkey-border-color);
+        }
+
+        .check {
+            inline-size: 3.5rem;
+            padding: 0;
+        }
+
+        .check > * {
+            display: grid;
+            place-items: center;
+            min-block-size: 4rem;
+        }
+
+        th.check > * {
+            min-block-size: 0;
+            line-height: 0;
+        }
+
+        th.check .select {
+            margin-block: -0.0625rem;
+        }
+
+        .end {
+            text-align: end;
         }
 
         .actions {
             display: grid;
             grid-auto-flow: column;
-            justify-content: start;
-            gap: 0.5rem;
+            justify-content: end;
+            gap: 0.25rem;
             align-items: center;
         }
 
         :is(td, .card) :is(button, a.button) {
             min-block-size: 2.75rem;
-            padding: 0 1rem;
+            padding: 0 0.75rem;
+            font-weight: 600;
+            color: var(--monkey-link-color);
+            background: none;
+            border: 0;
+            border-radius: var(--monkey-radius);
         }
 
-        .tools {
-            display: grid;
-            grid-auto-flow: column;
-            justify-content: space-between;
-            gap: 1rem;
-            align-items: end;
+        :is(td, .card) a.button {
+            text-decoration: underline;
         }
 
-        .tabs, .views {
-            display: grid;
-            grid-auto-flow: column;
-            justify-content: start;
-            gap: 0.5rem;
-        }
-
-        .tabs button, .views button {
-            min-block-size: 2.75rem;
-            padding: 0 1rem;
-        }
-
-        button[aria-pressed='true'] {
-            color: var(--monkey-accent-contrast-color);
-            background: var(--monkey-accent-color);
-            border-color: transparent;
+        :is(td, .card) .danger {
+            color: var(--monkey-error-color);
         }
 
         .bulk {
             display: grid;
-            grid-auto-flow: column;
-            justify-content: start;
+            grid-template-columns: 1fr auto auto auto;
             gap: 0.75rem;
             align-items: center;
-            padding: 0.75rem 1.125rem;
-            background: var(--monkey-surface-color);
-            border: 1px solid var(--monkey-border-color);
+            min-block-size: 3.5rem;
+            padding: 0 1rem;
+            background: color-mix(in oklab, var(--monkey-accent-color) 14%, var(--monkey-surface-color));
+            border: 1px solid color-mix(in oklab, var(--monkey-accent-color) 35%, var(--monkey-surface-color));
             border-radius: var(--monkey-radius);
         }
 
         .bulk button {
             min-block-size: 2.75rem;
             padding: 0 1rem;
+            background: var(--monkey-surface-color);
+            border-radius: var(--monkey-radius);
+        }
+
+        .bulk .clear {
+            padding: 0 0.75rem;
+            font-weight: 400;
+            background: none;
+            border: 0;
         }
 
         .select {
-            inline-size: 1.375rem;
+            inline-size: 1.25rem;
+            block-size: 1.25rem;
         }
 
         .cards {
@@ -206,6 +298,33 @@ export class MonkeyCollectionList extends LitElement {
 
         .card dd {
             margin: 0;
+        }
+
+        .pager {
+            display: grid;
+            grid-template-columns: 1fr auto;
+            gap: 0.75rem;
+            align-items: center;
+            color: var(--monkey-muted-color);
+        }
+
+        .pager div {
+            display: grid;
+            grid-auto-flow: column;
+            gap: 0.5rem;
+        }
+
+        .pager button {
+            min-block-size: 2.75rem;
+            padding: 0 1.125rem;
+        }
+
+        .pager button:disabled {
+            opacity: 1;
+            font-weight: 400;
+            color: var(--monkey-muted-color);
+            border-color: var(--monkey-border-color);
+            cursor: default;
         }
 
         dialog {
@@ -505,17 +624,17 @@ export class MonkeyCollectionList extends LitElement {
                     <caption class="visually-hidden">${collection.label ?? this.collection}</caption>
                     <thead>
                         <tr>
-                            ${selectable ? html`<th scope="col"><input type="checkbox" class="select" aria-label="Select all" .checked=${this.selected.size === page.items.length}
-                                @change=${(event: Event) => this.toggleAll((event.target as HTMLInputElement).checked)}></th>` : nothing}
+                            ${selectable ? html`<th scope="col" class="check"><span><input type="checkbox" class="select" aria-label="Select all" .checked=${this.selected.size === page.items.length}
+                                @change=${(event: Event) => this.toggleAll((event.target as HTMLInputElement).checked)}></span></th>` : nothing}
                             ${columns.map(([name, field]) => html`<th scope="col">${field.label ?? name}</th>`)}
-                            <th scope="col">Actions</th>
+                            <th scope="col" class="end"><span class="visually-hidden">Actions</span></th>
                         </tr>
                     </thead>
                     <tbody>
                         ${page.items.map((entry) => html`<tr>
-                            ${selectable ? html`<td>${this.checkbox(entry)}</td>` : nothing}
+                            ${selectable ? html`<td class="check"><span>${this.checkbox(entry)}</span></td>` : nothing}
                             ${columns.map(([name]) => html`<td>${this.cell(name, entry.values[name], collection)}</td>`)}
-                            <td>${this.actions(entry.id, this.labelOf(entry), collection)}</td>
+                            <td class="end">${this.actions(entry.id, this.labelOf(entry), collection)}</td>
                         </tr>`)}
                     </tbody>
                 </table>
@@ -564,18 +683,25 @@ export class MonkeyCollectionList extends LitElement {
             </dialog>`
     }
 
-    private tools(collection: CollectionConfig): unknown {
+    private toolbar(collection: CollectionConfig): unknown {
         const status = collection.status
         const options = status === undefined ? undefined : collection.fields[status.field]?.options
+        const label = collection.label ?? this.collection
 
         return html`
-            <div class="tools">
+            <div class="toolbar">
                 ${status?.param === undefined || options === undefined ? html`<span></span>` : html`
                     <div class="tabs" role="group" aria-label="Status">
                         ${['', ...options].map((option) => html`<button type="button" aria-pressed=${String(this.status === option)} @click=${() => this.setStatus(option)}>${option === '' ? 'All' : option}</button>`)}
                     </div>`}
+                ${collection.list.searchParam === undefined ? html`<span></span>` : html`
+                    <form role="search" class="search" @submit=${(event: SubmitEvent) => this.submitSearch(event)}>
+                        <span aria-hidden="true"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round"><circle cx="11" cy="11" r="7"></circle><path d="m20 20-3.5-3.5"></path></svg></span>
+                        <input type="search" placeholder=${`Search ${label.toLowerCase()}`} aria-label=${`Search ${label.toLowerCase()}`} .value=${this.search} @input=${(event: Event) => { this.search = (event.target as HTMLInputElement).value }}>
+                    </form>`}
                 <div class="views" role="group" aria-label="View">
-                    ${(['table', 'cards'] as const).map((view) => html`<button type="button" aria-pressed=${String(this.view === view)} @click=${() => this.setView(view)}>${view === 'table' ? 'Table' : 'Cards'}</button>`)}
+                    <button type="button" aria-label="Table view" aria-pressed=${String(this.view === 'table')} @click=${() => this.setView('table')}><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" aria-hidden="true"><path d="M4 7h16M4 12h16M4 17h16"></path></svg></button>
+                    <button type="button" aria-label="Card view" aria-pressed=${String(this.view === 'cards')} @click=${() => this.setView('cards')}><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linejoin="round" aria-hidden="true"><rect x="4" y="4" width="7" height="7" rx="1.5"></rect><rect x="13" y="4" width="7" height="7" rx="1.5"></rect><rect x="4" y="13" width="7" height="7" rx="1.5"></rect><rect x="13" y="13" width="7" height="7" rx="1.5"></rect></svg></button>
                 </div>
             </div>`
     }
@@ -583,22 +709,25 @@ export class MonkeyCollectionList extends LitElement {
     private bulkBar(collection: CollectionConfig): unknown {
         return this.selected.size === 0 ? nothing : html`
             <div class="bulk" role="region" aria-label="Bulk actions">
-                <span>${this.selected.size} selected</span>
+                <strong>${this.selected.size} selected</strong>
                 ${collection.status?.publish === undefined || collection.update === undefined ? nothing : html`<button type="button" @click=${() => this.bulkPublish(collection)}>Publish</button>`}
                 ${collection.delete === undefined ? nothing : this.confirmingBulk
                     ? html`
                         <button type="button" class="danger" @click=${() => this.bulkDelete()}>Confirm delete ${this.selected.size}</button>
                         <button type="button" @click=${() => { this.confirmingBulk = false }}>Cancel</button>`
-                    : html`<button type="button" class="danger" @click=${() => { this.confirmingBulk = true }}>Delete selected</button>`}
+                    : html`<button type="button" class="danger" @click=${() => { this.confirmingBulk = true }}>Delete</button>`}
+                <button type="button" class="clear" @click=${() => this.clearSelection()}>Clear</button>
             </div>`
     }
 
     private pager(page: ListPage): unknown {
         return html`
-            <nav aria-label="Pages">
-                <button type="button" ?disabled=${this.history.length === 0 || this.loading} @click=${() => this.previous()}>Previous</button>
-                <button type="button" ?disabled=${page.next === null || this.loading} @click=${() => this.next()}>Next</button>
-                ${page.total === undefined ? nothing : html`<span>${page.total} entries</span>`}
+            <nav class="pager" aria-label="Pages">
+                <span>${page.total === undefined ? '' : `${page.total} entries`}</span>
+                <div>
+                    <button type="button" ?disabled=${this.history.length === 0 || this.loading} @click=${() => this.previous()}>Previous</button>
+                    <button type="button" ?disabled=${page.next === null || this.loading} @click=${() => this.next()}>Next</button>
+                </div>
             </nav>`
     }
 
@@ -609,17 +738,17 @@ export class MonkeyCollectionList extends LitElement {
             return html`<p role="alert">There is no collection "${this.collection}"</p>`
         }
 
+        const host = getConfig() === undefined ? '' : new URL(getConfig()!.baseUrl).host
+
         return html`
             <header>
-                <h2>${collection.label ?? this.collection}</h2>
-                ${collection.create === undefined ? nothing : html`<a class="button primary" href=${hrefOf({ view: 'new', collection: this.collection })}>New</a>`}
+                <div class="title">
+                    ${host === '' ? nothing : html`<span class="eyebrow">${host}</span>`}
+                    <h1>${collection.label ?? this.collection}</h1>
+                </div>
+                ${collection.create === undefined ? nothing : html`<a class="button primary" href=${hrefOf({ view: 'new', collection: this.collection })}><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.4" stroke-linecap="round" aria-hidden="true"><path d="M12 5v14M5 12h14"></path></svg>New</a>`}
             </header>
-            ${collection.list.searchParam === undefined ? nothing : html`
-                <form role="search" @submit=${(event: SubmitEvent) => this.submitSearch(event)}>
-                    <label>Search <input type="search" .value=${this.search} @input=${(event: Event) => { this.search = (event.target as HTMLInputElement).value }}></label>
-                    <button type="submit">Search</button>
-                </form>`}
-            ${this.tools(collection)}
+            ${this.toolbar(collection)}
             ${this.bulkBar(collection)}
             ${this.message === '' ? nothing : html`<p role="alert">${this.message}</p>`}
             ${this.loading ? html`<p role="status">Loading…</p>` : nothing}

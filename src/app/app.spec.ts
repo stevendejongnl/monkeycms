@@ -143,12 +143,12 @@ test.describe('collection list', () => {
         await serve(page, threePosts())
         await open(page, '#/posts')
         await app(page).getByRole('searchbox', { name: 'Search' }).fill('Second')
-        await app(page).getByRole('button', { name: 'Search' }).click()
+        await page.keyboard.press('Enter')
 
         await expect(app(page).getByRole('row')).toHaveCount(2)
 
         await app(page).getByRole('searchbox', { name: 'Search' }).fill('nothing like it')
-        await app(page).getByRole('button', { name: 'Search' }).click()
+        await page.keyboard.press('Enter')
 
         await expect(app(page).getByRole('status')).toHaveText('No entries found')
     })
@@ -198,7 +198,7 @@ test.describe('collection list', () => {
     test('should switch to cards and remember it for the collection', async ({ page }) => {
         await serve(page, threePosts())
         await open(page, '#/posts')
-        await app(page).getByRole('button', { name: 'Cards' }).click()
+        await app(page).getByRole('button', { name: 'Card view' }).click()
 
         await expect(app(page).getByRole('table')).toHaveCount(0)
         await expect(app(page).getByRole('list', { name: 'Posts' }).getByRole('listitem')).toHaveCount(2)
@@ -208,7 +208,7 @@ test.describe('collection list', () => {
 
         await expect(app(page).getByRole('list', { name: 'Posts' }).getByRole('listitem')).toHaveCount(2)
 
-        await app(page).getByRole('button', { name: 'Table' }).click()
+        await app(page).getByRole('button', { name: 'Table view' }).click()
 
         await expect(app(page).getByRole('table')).toBeVisible()
     })
@@ -238,12 +238,12 @@ test.describe('collection list', () => {
         await serve(page, threePosts(), requests)
         await open(page, '#/posts')
         await app(page).getByRole('checkbox', { name: 'Select all' }).check()
-        await app(page).getByRole('button', { name: 'Delete selected' }).click()
+        await app(page).getByRole('button', { name: 'Delete', exact: true }).click()
         await app(page).getByRole('button', { name: 'Cancel' }).click()
 
         expect(requests.some((request) => request.startsWith('DELETE'))).toBe(false)
 
-        await app(page).getByRole('button', { name: 'Delete selected' }).click()
+        await app(page).getByRole('button', { name: 'Delete', exact: true }).click()
         await app(page).getByRole('button', { name: 'Confirm delete 2' }).click()
 
         await expect(app(page).getByRole('cell', { name: 'Third thing', exact: true })).toBeVisible()
