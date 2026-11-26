@@ -1,6 +1,7 @@
 import { LitElement, css, html, nothing } from 'lit'
 import { customElement, property, state } from 'lit/decorators.js'
 import { getClient } from '../../client/main.ts'
+import { alertStyles, buttonStyles, linkStyles } from '../../base/styles.ts'
 import { getConfig } from '../../config/main.ts'
 import type { CollectionConfig } from '../../config/main.ts'
 import '../../fields/main.ts'
@@ -19,27 +20,42 @@ type Status = 'loading' | 'ready' | 'failed'
 // property is true then). Sends "monkey-saved" with { collection, id } after a save.
 @customElement('monkey-entry-editor')
 export class MonkeyEntryEditor extends LitElement {
-    static override styles = css`
+    static override styles = [buttonStyles, linkStyles, alertStyles, css`
         :host {
             display: grid;
-            gap: var(--monkey-gap, 1rem);
+            gap: var(--monkey-gap);
+            max-inline-size: 48rem;
+        }
+
+        h2 {
+            margin: 0;
+            font-size: 2rem;
+            line-height: 1.15;
+            letter-spacing: -0.02em;
         }
 
         form {
             display: grid;
-            gap: var(--monkey-gap, 1rem);
+            gap: var(--monkey-gap);
+            padding: clamp(1.25rem, 3vw, 2rem);
+            background: var(--monkey-surface-color);
+            border: 1px solid var(--monkey-border-color);
+            border-radius: calc(var(--monkey-radius) + 0.5rem);
         }
 
         .actions {
-            display: flex;
-            gap: 0.5rem;
+            display: grid;
+            grid-auto-flow: column;
+            justify-content: start;
+            gap: 0.75rem;
             align-items: center;
         }
 
-        [role='alert'] {
-            color: var(--monkey-error-color, #ff5370);
+        [role='status'] {
+            margin: 0;
+            color: var(--monkey-muted-color);
         }
-    `
+    `]
 
     @property({ type: String })
     collection = ''
@@ -205,7 +221,7 @@ export class MonkeyEntryEditor extends LitElement {
                 ${this.message === '' ? nothing : html`<p role="alert">${this.message}</p>`}
                 <div class="actions">
                     <button type="submit" ?disabled=${this.saving}>${this.saving ? 'Saving…' : 'Save'}</button>
-                    <a href=${hrefOf({ view: 'list', collection: this.collection })}>Cancel</a>
+                    <a class="button" href=${hrefOf({ view: 'list', collection: this.collection })}>Cancel</a>
                 </div>
             </form>`
     }

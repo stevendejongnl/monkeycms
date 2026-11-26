@@ -2,6 +2,7 @@ import { LitElement, css, html, nothing } from 'lit'
 import { customElement, property, state } from 'lit/decorators.js'
 import { getClient } from '../../client/main.ts'
 import type { ListPage } from '../../client/main.ts'
+import { alertStyles, buttonStyles, controlStyles, linkStyles } from '../../base/styles.ts'
 import { getConfig } from '../../config/main.ts'
 import type { CollectionConfig } from '../../config/main.ts'
 import type { PageState } from '../../mapping/main.ts'
@@ -18,17 +19,54 @@ const columnsOf = (collection: CollectionConfig) =>
 // config has a searchParam, a link to each entry, and delete after a confirmation.
 @customElement('monkey-collection-list')
 export class MonkeyCollectionList extends LitElement {
-    static override styles = css`
+    static override styles = [controlStyles, buttonStyles, linkStyles, alertStyles, css`
         :host {
             display: grid;
-            gap: var(--monkey-gap, 1rem);
+            gap: var(--monkey-gap);
         }
 
-        header, form, nav, .actions {
-            display: flex;
-            flex-wrap: wrap;
-            gap: 0.5rem;
+        header {
+            display: grid;
+            grid-template-columns: 1fr auto;
+            gap: 1rem;
             align-items: center;
+        }
+
+        h2 {
+            margin: 0;
+            font-size: 2rem;
+            line-height: 1.15;
+            letter-spacing: -0.02em;
+        }
+
+        form {
+            display: grid;
+            grid-template-columns: minmax(0, 24rem) auto;
+            justify-content: start;
+            gap: 0.75rem;
+            align-items: end;
+        }
+
+        form label {
+            display: grid;
+            gap: var(--monkey-field-gap);
+            font-weight: 600;
+        }
+
+        nav {
+            display: grid;
+            grid-auto-flow: column;
+            justify-content: start;
+            gap: 0.75rem;
+            align-items: center;
+            color: var(--monkey-muted-color);
+        }
+
+        .table {
+            overflow-x: auto;
+            background: var(--monkey-surface-color);
+            border: 1px solid var(--monkey-border-color);
+            border-radius: calc(var(--monkey-radius) + 0.5rem);
         }
 
         table {
@@ -38,8 +76,32 @@ export class MonkeyCollectionList extends LitElement {
 
         th, td {
             text-align: start;
-            padding: 0.25rem 0.5rem;
-            border-block-end: 1px solid currentcolor;
+            padding: var(--monkey-padding) 1.125rem;
+        }
+
+        tbody tr + tr :is(th, td) {
+            border-block-start: 1px solid var(--monkey-border-color);
+        }
+
+        th {
+            font-size: 0.8125rem;
+            letter-spacing: 0.06em;
+            text-transform: uppercase;
+            color: var(--monkey-muted-color);
+            border-block-end: 1px solid var(--monkey-border-color);
+        }
+
+        .actions {
+            display: grid;
+            grid-auto-flow: column;
+            justify-content: start;
+            gap: 0.5rem;
+            align-items: center;
+        }
+
+        td button, td a.button {
+            min-block-size: 2.75rem;
+            padding: 0 1rem;
         }
 
         .visually-hidden {
@@ -50,10 +112,11 @@ export class MonkeyCollectionList extends LitElement {
             clip-path: inset(50%);
         }
 
-        [role='alert'] {
-            color: var(--monkey-error-color, #ff5370);
+        [role='status'] {
+            margin: 0;
+            color: var(--monkey-muted-color);
         }
-    `
+    `]
 
     @property({ type: String })
     collection = ''
@@ -171,15 +234,17 @@ export class MonkeyCollectionList extends LitElement {
         const route = hrefOf({ view: 'edit', collection: this.collection, id })
 
         return html`
-            <td class="actions">
-                ${collection.get !== undefined || collection.update !== undefined
-                    ? html`<a href=${route} aria-label=${`Edit ${label}`}>Edit</a>`
-                    : nothing}
-                ${collection.delete === undefined ? nothing : this.confirming === id
-                    ? html`
-                        <button type="button" @click=${() => this.deleteEntry(id)}>Confirm delete</button>
-                        <button type="button" @click=${() => { this.confirming = undefined }}>Cancel</button>`
-                    : html`<button type="button" aria-label=${`Delete ${label}`} @click=${() => { this.confirming = id }}>Delete</button>`}
+            <td>
+                <div class="actions">
+                    ${collection.get !== undefined || collection.update !== undefined
+                        ? html`<a class="button" href=${route} aria-label=${`Edit ${label}`}>Edit</a>`
+                        : nothing}
+                    ${collection.delete === undefined ? nothing : this.confirming === id
+                        ? html`
+                            <button type="button" class="danger" @click=${() => this.deleteEntry(id)}>Confirm delete</button>
+                            <button type="button" @click=${() => { this.confirming = undefined }}>Cancel</button>`
+                        : html`<button type="button" class="danger" aria-label=${`Delete ${label}`} @click=${() => { this.confirming = id }}>Delete</button>`}
+                </div>
             </td>`
     }
 
@@ -189,25 +254,27 @@ export class MonkeyCollectionList extends LitElement {
         return page.items.length === 0
             ? html`<p role="status">${this.term === '' ? 'No entries yet' : 'No entries found'}</p>`
             : html`
-                <table>
-                    <caption class="visually-hidden">${collection.label ?? this.collection}</caption>
-                    <thead>
-                        <tr>
-                            ${columns.map(([name, field]) => html`<th scope="col">${field.label ?? name}</th>`)}
-                            <th scope="col">Actions</th>
-                        </tr>
-                    </thead>
-                    <tbody>
-                        ${page.items.map((entry) => {
-                            const label = String(Object.values(entry.values).find((value) => typeof value === 'string' && value !== '') ?? entry.id)
+                <div class="table">
+                    <table>
+                        <caption class="visually-hidden">${collection.label ?? this.collection}</caption>
+                        <thead>
+                            <tr>
+                                ${columns.map(([name, field]) => html`<th scope="col">${field.label ?? name}</th>`)}
+                                <th scope="col">Actions</th>
+                            </tr>
+                        </thead>
+                        <tbody>
+                            ${page.items.map((entry) => {
+                                const label = String(Object.values(entry.values).find((value) => typeof value === 'string' && value !== '') ?? entry.id)
 
-                            return html`<tr>
-                                ${columns.map(([name]) => html`<td>${this.cell(name, entry.values[name], collection)}</td>`)}
-                                ${this.actions(entry.id, label, collection)}
-                            </tr>`
-                        })}
-                    </tbody>
-                </table>`
+                                return html`<tr>
+                                    ${columns.map(([name]) => html`<td>${this.cell(name, entry.values[name], collection)}</td>`)}
+                                    ${this.actions(entry.id, label, collection)}
+                                </tr>`
+                            })}
+                        </tbody>
+                    </table>
+                </div>`
     }
 
     private pager(page: ListPage): unknown {
@@ -229,7 +296,7 @@ export class MonkeyCollectionList extends LitElement {
         return html`
             <header>
                 <h2>${collection.label ?? this.collection}</h2>
-                ${collection.create === undefined ? nothing : html`<a href=${hrefOf({ view: 'new', collection: this.collection })}>New</a>`}
+                ${collection.create === undefined ? nothing : html`<a class="button primary" href=${hrefOf({ view: 'new', collection: this.collection })}>New</a>`}
             </header>
             ${collection.list.searchParam === undefined ? nothing : html`
                 <form role="search" @submit=${(event: SubmitEvent) => this.submitSearch(event)}>

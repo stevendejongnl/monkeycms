@@ -3,6 +3,7 @@ import { customElement, state } from 'lit/decorators.js'
 import '../auth/login/login.ts'
 import { getAuth } from '../auth/main.ts'
 import { effect } from '../base/signals/signals.ts'
+import { linkStyles } from '../base/styles.ts'
 import { getConfig } from '../config/main.ts'
 import './collection-list/collection-list.ts'
 import './entry-editor/entry-editor.ts'
@@ -19,20 +20,47 @@ const LEAVE_QUESTION = 'You have unsaved changes. Leave without saving?'
 // changes, and goes back to the list after a save.
 @customElement('monkey-app')
 export class MonkeyApp extends LitElement {
-    static override styles = css`
+    static override styles = [linkStyles, css`
         :host {
             display: grid;
-            gap: var(--monkey-gap, 1rem);
+            gap: var(--monkey-gap);
+            box-sizing: border-box;
+            max-inline-size: 72rem;
+            margin-inline: auto;
+            padding: var(--monkey-gap) clamp(1rem, 4vw, 3rem);
         }
 
         nav ul {
-            display: flex;
-            flex-wrap: wrap;
-            gap: 1rem;
+            display: grid;
+            grid-auto-flow: column;
+            justify-content: start;
+            gap: 0.25rem;
+            margin: 0;
             padding: 0;
             list-style: none;
         }
-    `
+
+        nav a {
+            display: grid;
+            align-items: center;
+            min-block-size: 2.75rem;
+            padding: 0 1rem;
+            font-weight: 600;
+            color: var(--monkey-muted-color);
+            text-decoration: none;
+            border-radius: 999px;
+        }
+
+        nav a[aria-current='page'] {
+            color: var(--monkey-accent-contrast-color);
+            background: var(--monkey-accent-color);
+        }
+
+        a:focus-visible {
+            outline: 3px solid var(--monkey-link-color);
+            outline-offset: 2px;
+        }
+    `]
 
     @state() private route: Route = parseRoute(location.hash)
 

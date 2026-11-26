@@ -1,6 +1,7 @@
 import { LitElement, css, html, nothing } from 'lit'
 import { property } from 'lit/decorators.js'
 import type { TemplateResult } from 'lit'
+import { controlStyles } from '../base/styles.ts'
 
 
 export const FIELD_CHANGE = 'monkey-change'
@@ -21,10 +22,10 @@ export interface ControlAttributes {
 // a disabled and a read-only state, and one "monkey-change" event with { name, value }.
 // A field type only draws its control and says how a user action becomes a value.
 export abstract class MonkeyField<T> extends LitElement {
-    static override styles = css`
+    static override styles = [controlStyles, css`
         :host {
             display: grid;
-            gap: var(--monkey-field-gap, 0.25rem);
+            gap: var(--monkey-field-gap);
         }
 
         label {
@@ -32,19 +33,16 @@ export abstract class MonkeyField<T> extends LitElement {
         }
 
         input:not([type='checkbox']), textarea, select {
-            font: inherit;
             min-inline-size: 0;
-        }
-
-        input[aria-invalid='true'], textarea[aria-invalid='true'], select[aria-invalid='true'] {
-            outline: 2px solid var(--monkey-error-color, #ff5370);
         }
 
         [role='alert'] {
             margin: 0;
-            color: var(--monkey-error-color, #ff5370);
+            font-size: 0.875rem;
+            font-weight: 500;
+            color: var(--monkey-error-color);
         }
-    `
+    `]
 
     // The key of the field in the entry.
     @property({ type: String })

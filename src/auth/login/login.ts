@@ -1,6 +1,7 @@
-import { LitElement, html } from 'lit'
+import { LitElement, css, html } from 'lit'
 import { customElement, state } from 'lit/decorators.js'
 import { effect } from '../../base/signals/signals.ts'
+import { alertStyles, buttonStyles, controlStyles } from '../../base/styles.ts'
 import { getAuth } from '../store.ts'
 import type { Auth, CredentialField } from '../types.ts'
 
@@ -18,6 +19,49 @@ const autocompleteOf = ({ name }: CredentialField): string =>
 // gets a 401, because the client then ends the session.
 @customElement('monkey-login')
 export class MonkeyLogin extends LitElement {
+    static override styles = [controlStyles, buttonStyles, alertStyles, css`
+        :host {
+            display: grid;
+        }
+
+        form {
+            display: grid;
+            gap: 1.25rem;
+            box-sizing: border-box;
+            inline-size: min(26rem, 100%);
+            margin: 2rem auto;
+            padding: clamp(1.5rem, 5vw, 2.25rem);
+            background: var(--monkey-surface-color);
+            border: 1px solid var(--monkey-border-color);
+            border-radius: calc(var(--monkey-radius) + 0.625rem);
+        }
+
+        label {
+            display: grid;
+            gap: var(--monkey-field-gap);
+            font-weight: 600;
+        }
+
+        form button {
+            min-block-size: 3.25rem;
+        }
+
+        p[role='status'] {
+            display: grid;
+            grid-auto-flow: column;
+            justify-content: end;
+            gap: 0.75rem;
+            align-items: center;
+            margin: 0;
+            padding: 0.5rem clamp(1rem, 4vw, 3rem) 0;
+            color: var(--monkey-muted-color);
+        }
+
+        p[role='status'] button {
+            min-block-size: 2.75rem;
+        }
+    `]
+
     @state()
     private busy = false
 

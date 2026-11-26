@@ -76,6 +76,38 @@ Where the session is kept (`persist`):
 
 A password is only used for the sign-in request. MonkeyCMS does not keep it. For `login`, a token that has an expiry is dropped on the client when the time is up. With cookie sessions the browser keeps the cookie, so the API must set the correct `SameSite` and CORS headers (`Access-Control-Allow-Credentials`).
 
+### Theming
+
+Every colour, size and font is a CSS custom property, so a theme is a few lines of CSS. Light is the default, and the dark values apply when the system asks for dark. Set a token on `:root`, or on the `monkey-app` element, to change it:
+
+```css
+:root {
+    --monkey-accent-color: #0f766e;
+    --monkey-radius: 0.75rem;
+    --monkey-font: 'Source Serif 4', serif;
+}
+```
+
+| Token | Use |
+|-------|-----|
+| `--monkey-background-color` | Page background |
+| `--monkey-surface-color` | Cards, tables, the sign-in form |
+| `--monkey-color` | Body text |
+| `--monkey-muted-color` | Hints and table heads |
+| `--monkey-border-color` | Dividers and card edges |
+| `--monkey-control-border-color` | Input and button borders |
+| `--monkey-accent-color` | Primary button, active menu item |
+| `--monkey-accent-contrast-color` | Text on the accent. White or dark, chosen from the accent |
+| `--monkey-link-color` | Links. The accent, lightened in dark mode |
+| `--monkey-error-color` | Error messages and borders |
+| `--monkey-radius` | Corner of buttons, inputs and cards |
+| `--monkey-gap` | Space between blocks |
+| `--monkey-field-gap` | Space between a label and its input |
+| `--monkey-padding` | Space in table cells |
+| `--monkey-font` | The font of all text |
+
+To force a mode, set `data-theme="light"` or `data-theme="dark"` on the `html` element. Without it, the page follows the system. The link and contrast tokens are worked out from the accent on `:root`, so when you set the accent on the `monkey-app` element instead, set those two as well. For a compact look, make `--monkey-gap` and `--monkey-padding` smaller. The components need `dist/main.css` on the page, because that file defines the tokens.
+
 ### Out of scope
 
 - A server, database or file storage. Bring your own API.
