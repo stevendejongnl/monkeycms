@@ -1,6 +1,7 @@
 import { LitElement, css, html } from 'lit'
 import { customElement, state } from 'lit/decorators.js'
 import { effect } from 'base/signals/signals.ts'
+import { getConfig } from 'config/main.ts'
 import 'app/logo/logo.ts'
 import { alertStyles, buttonStyles, controlStyles } from 'base/styles.ts'
 import { getAuth } from '../store.ts'
@@ -25,31 +26,182 @@ export class MonkeyLogin extends LitElement {
             display: grid;
         }
 
+        .screen {
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(min(100%, 26.25rem), 1fr));
+            min-block-size: 100dvh;
+            background: var(--monkey-background-color);
+        }
+
+        aside {
+            display: grid;
+            grid-template-rows: auto 1fr auto;
+            gap: 1.5rem;
+            box-sizing: border-box;
+            padding: clamp(1.75rem, 5vw, 4rem);
+            color: var(--monkey-accent-contrast-color);
+            background: linear-gradient(160deg, var(--monkey-accent-color), color-mix(in oklab, var(--monkey-accent-color) 55%, #000));
+        }
+
+        aside monkey-logo {
+            --monkey-logo-ink-color: var(--monkey-accent-contrast-color);
+            --monkey-logo-accent-color: color-mix(in oklab, var(--monkey-accent-contrast-color) 65%, var(--monkey-accent-color));
+        }
+
+        .brand {
+            block-size: 3rem;
+            justify-self: start;
+        }
+
+        .hero {
+            display: grid;
+            align-self: center;
+            gap: 1rem;
+            max-inline-size: 30rem;
+        }
+
+        .badge {
+            display: grid;
+            place-items: center;
+            justify-self: start;
+            inline-size: clamp(8.75rem, 18vw, 12.5rem);
+            aspect-ratio: 1;
+            margin-block-end: 0.5rem;
+            border-radius: 50%;
+            background: color-mix(in oklab, var(--monkey-accent-contrast-color) 14%, transparent);
+            box-shadow: 0 0 0 clamp(0.625rem, 1.6vw, 1.125rem) color-mix(in oklab, var(--monkey-accent-contrast-color) 7%, transparent);
+        }
+
+        .badge monkey-logo {
+            block-size: 6.25rem;
+        }
+
+        h2 {
+            margin: 0;
+            font-size: clamp(2rem, 4vw, 3rem);
+            line-height: 1.1;
+            letter-spacing: -0.03em;
+        }
+
+        .lead {
+            margin: 0;
+            font-size: 1.125rem;
+            opacity: 0.9;
+        }
+
+        .connected {
+            font-size: 0.875rem;
+            opacity: 0.85;
+        }
+
+        main {
+            display: grid;
+            place-items: center;
+            box-sizing: border-box;
+            padding: clamp(1.5rem, 5vw, 4rem);
+        }
+
         form {
             display: grid;
             gap: 1.25rem;
-            box-sizing: border-box;
-            inline-size: min(26rem, 100%);
-            margin: 2rem auto;
-            padding: clamp(1.5rem, 5vw, 2.25rem);
-            background: var(--monkey-surface-color);
-            border: 1px solid var(--monkey-border-color);
-            border-radius: calc(var(--monkey-radius) + 0.625rem);
+            inline-size: min(25rem, 100%);
         }
 
-        monkey-logo {
-            justify-self: center;
-            block-size: 3.5rem;
+        .heading {
+            display: grid;
+            line-height: 1.2;
+        }
+
+        .eyebrow {
+            font-size: 0.8125rem;
+            font-weight: 600;
+            letter-spacing: 0.06em;
+            text-transform: uppercase;
+            color: var(--monkey-muted-color);
+        }
+
+        h1 {
+            margin: 0.25rem 0 0;
+            font-size: 2.125rem;
+            letter-spacing: -0.02em;
+        }
+
+        [role='alert'] {
+            display: grid;
+            grid-template-columns: auto 1fr;
+            gap: 0.625rem;
+            align-items: start;
+            padding: 0.75rem 0.875rem;
+        }
+
+        [role='alert'] svg {
+            inline-size: 1.375rem;
+            block-size: 1.375rem;
+            color: var(--monkey-error-color);
+        }
+
+        [role='alert'] span {
+            display: grid;
+        }
+
+        [role='alert'] small {
+            font-size: inherit;
+            color: var(--monkey-muted-color);
+        }
+
+        .field {
+            display: grid;
+            gap: var(--monkey-field-gap);
         }
 
         label {
-            display: grid;
-            gap: var(--monkey-field-gap);
             font-weight: 600;
         }
 
-        form button {
+        input:not([type='checkbox']) {
+            background: var(--monkey-surface-color);
+        }
+
+        .secret {
+            display: grid;
+            grid-template-columns: 1fr auto;
+            align-items: center;
+            background: var(--monkey-surface-color);
+            border: 1px solid var(--monkey-control-border-color);
+            border-radius: var(--monkey-radius);
+        }
+
+        .secret:focus-within {
+            outline: 3px solid var(--monkey-link-color);
+            outline-offset: 2px;
+        }
+
+        .secret input {
+            min-inline-size: 0;
+            min-block-size: 2.875rem;
+            background: none;
+            border: 0;
+            outline: 0;
+        }
+
+        .secret button {
+            min-block-size: 2.75rem;
+            padding: 0 0.875rem;
+            color: var(--monkey-link-color);
+            background: none;
+            border: 0;
+            border-radius: var(--monkey-radius);
+        }
+
+        form > button {
             min-block-size: 3.25rem;
+            font-size: 1rem;
+        }
+
+        .note {
+            margin: 0;
+            font-size: 0.875rem;
+            color: var(--monkey-muted-color);
         }
 
         p[role='status'] {
@@ -73,6 +225,9 @@ export class MonkeyLogin extends LitElement {
 
     @state()
     private message = ''
+
+    @state()
+    private shown = false
 
     private stop: (() => void) | undefined
 
@@ -126,27 +281,65 @@ export class MonkeyLogin extends LitElement {
         this.dispatchEvent(new CustomEvent(SIGNED_OUT, { bubbles: true, composed: true }))
     }
 
+    private input(field: CredentialField): unknown {
+        return html`
+            <input
+                id=${field.name}
+                name=${field.name}
+                type=${field.secret && !this.shown ? 'password' : 'text'}
+                autocomplete=${autocompleteOf(field)}
+                required
+                ?disabled=${this.busy}>`
+    }
+
     private field(field: CredentialField): unknown {
         return html`
-            <label>
-                <span>${field.label}</span>
-                <input
-                    name=${field.name}
-                    type=${field.secret ? 'password' : 'text'}
-                    autocomplete=${autocompleteOf(field)}
-                    required
-                    ?disabled=${this.busy}>
-            </label>`
+            <div class="field">
+                <label for=${field.name}>${field.label}</label>
+                ${field.secret
+                    ? html`<div class="secret">${this.input(field)}<button type="button" aria-controls=${field.name} aria-pressed=${String(this.shown)} @click=${() => { this.shown = !this.shown }}>${this.shown ? 'Hide' : 'Show'}</button></div>`
+                    : this.input(field)}
+            </div>`
+    }
+
+    private aside(): unknown {
+        const host = getConfig() === undefined ? '' : new URL(getConfig()!.baseUrl).host
+
+        return html`
+            <aside>
+                <monkey-logo class="brand"></monkey-logo>
+                <div class="hero">
+                    <span class="badge"><monkey-logo mark></monkey-logo></span>
+                    <h2>Edit content for any API.</h2>
+                    <p class="lead">No backend. No lock-in. Everything on screen follows one small config file.</p>
+                </div>
+                ${host === '' ? '' : html`<span class="connected">Connected to ${host}</span>`}
+            </aside>`
     }
 
     private form(auth: Auth): unknown {
+        const secret = auth.fields.some(({ secret }) => secret)
+
         return html`
-            <form @submit=${(event: SubmitEvent) => this.signIn(auth, event)}>
-                <monkey-logo></monkey-logo>
-                ${auth.fields.map((field) => this.field(field))}
-                <button type="submit" ?disabled=${this.busy}>${this.busy ? 'Signing in…' : 'Sign in'}</button>
-                ${this.message === '' ? '' : html`<p role="alert">${this.message}</p>`}
-            </form>`
+            <div class="screen">
+                ${this.aside()}
+                <main>
+                    <form @submit=${(event: SubmitEvent) => this.signIn(auth, event)}>
+                        <div class="heading">
+                            <span class="eyebrow">Welcome back</span>
+                            <h1>Sign in</h1>
+                        </div>
+                        ${this.message === '' ? '' : html`
+                            <div role="alert">
+                                <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" aria-hidden="true"><circle cx="12" cy="12" r="9"></circle><path d="M12 7.5v5.5M12 16.5h.01"></path></svg>
+                                <span><strong>Could not sign in</strong><small>${this.message}</small></span>
+                            </div>`}
+                        ${auth.fields.map((field) => this.field(field))}
+                        <button type="submit" ?disabled=${this.busy}>${this.busy ? 'Signing in…' : 'Sign in'}</button>
+                        ${secret ? html`<p class="note">The password is only sent to sign in. MonkeyCMS does not keep it.</p>` : ''}
+                    </form>
+                </main>
+            </div>`
     }
 
     protected override render(): unknown {

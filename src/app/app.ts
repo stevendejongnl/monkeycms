@@ -141,7 +141,7 @@ export class MonkeyApp extends LitElement {
         const config = getConfig()
 
         if (config === undefined || getAuth()?.isSignedIn() !== true) {
-            return html`<div class="page"><monkey-login></monkey-login></div>`
+            return html`<monkey-login></monkey-login>`
         }
 
         return html`
