@@ -1,0 +1,22 @@
+{
+  "configVersion": 1,
+  "baseUrl": "https://envelope.example.com/api",
+  "auth": { "type": "none" },
+  "pagination": { "type": "page", "pageParam": "page", "limitParam": "per_page", "pageSize": 10 },
+  "errors": { "messagePath": "error.message", "fieldErrorsPath": "error.fields" },
+  "collections": {
+    "posts": {
+      "label": "Posts",
+      "fields": {
+        "title": { "type": "text", "label": "Title", "required": true },
+        "body": { "type": "longtext", "label": "Body" },
+        "status": { "type": "select", "label": "Status", "options": ["draft", "published"] }
+      },
+      "list": { "path": "/posts", "itemsPath": "data", "totalPath": "meta.total", "searchParam": "search" },
+      "get": { "path": "/posts/{id}", "itemPath": "data" },
+      "create": { "path": "/posts", "itemPath": "data" },
+      "update": { "method": "PATCH", "path": "/posts/{id}", "itemPath": "data" },
+      "delete": { "path": "/posts/{id}" }
+    }
+  }
+}

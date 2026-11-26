@@ -1,0 +1,22 @@
+{
+  "configVersion": 1,
+  "baseUrl": "https://rest.example.com",
+  "auth": { "type": "none" },
+  "pagination": { "type": "page", "pageParam": "_page", "limitParam": "_limit", "pageSize": 10 },
+  "errors": { "messagePath": "message", "fieldErrorsPath": "errors" },
+  "collections": {
+    "posts": {
+      "label": "Posts",
+      "fields": {
+        "title": { "type": "text", "label": "Title", "required": true },
+        "body": { "type": "longtext", "label": "Body" },
+        "status": { "type": "select", "label": "Status", "options": ["draft", "published"] }
+      },
+      "list": { "path": "/posts", "searchParam": "q" },
+      "get": { "path": "/posts/{id}" },
+      "create": { "path": "/posts" },
+      "update": { "method": "PUT", "path": "/posts/{id}" },
+      "delete": { "path": "/posts/{id}" }
+    }
+  }
+}

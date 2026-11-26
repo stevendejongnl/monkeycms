@@ -1,0 +1,22 @@
+{
+  "configVersion": 1,
+  "baseUrl": "https://jsonapi.example.com",
+  "auth": { "type": "none" },
+  "pagination": { "type": "page", "pageParam": "page[number]", "limitParam": "page[size]", "pageSize": 10 },
+  "errors": { "messagePath": "errors[0].detail" },
+  "collections": {
+    "posts": {
+      "label": "Posts",
+      "fields": {
+        "title": { "type": "text", "label": "Title", "required": true, "path": "attributes.title" },
+        "body": { "type": "longtext", "label": "Body", "path": "attributes.body" },
+        "status": { "type": "select", "label": "Status", "options": ["draft", "published"], "path": "attributes.status" }
+      },
+      "list": { "path": "/posts", "itemsPath": "data", "totalPath": "meta.total", "searchParam": "filter[title]" },
+      "get": { "path": "/posts/{id}", "itemPath": "data" },
+      "create": { "path": "/posts", "itemPath": "data", "body": { "wrap": "data", "static": { "data.type": "posts" } } },
+      "update": { "method": "PATCH", "path": "/posts/{id}", "itemPath": "data", "body": { "wrap": "data", "static": { "data.type": "posts" } } },
+      "delete": { "path": "/posts/{id}" }
+    }
+  }
+}
