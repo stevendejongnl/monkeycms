@@ -1,6 +1,7 @@
 import { LitElement, css, html } from 'lit'
 import { customElement, state } from 'lit/decorators.js'
 import { effect } from 'base/signals/signals.ts'
+import 'app/logo/logo.ts'
 import { alertStyles, buttonStyles, controlStyles } from 'base/styles.ts'
 import { getAuth } from '../store.ts'
 import type { Auth, CredentialField } from '../types.ts'
@@ -34,6 +35,11 @@ export class MonkeyLogin extends LitElement {
             background: var(--monkey-surface-color);
             border: 1px solid var(--monkey-border-color);
             border-radius: calc(var(--monkey-radius) + 0.625rem);
+        }
+
+        monkey-logo {
+            justify-self: center;
+            block-size: 3.5rem;
         }
 
         label {
@@ -136,6 +142,7 @@ export class MonkeyLogin extends LitElement {
     private form(auth: Auth): unknown {
         return html`
             <form @submit=${(event: SubmitEvent) => this.signIn(auth, event)}>
+                <monkey-logo></monkey-logo>
                 ${auth.fields.map((field) => this.field(field))}
                 <button type="submit" ?disabled=${this.busy}>${this.busy ? 'Signing in…' : 'Sign in'}</button>
                 ${this.message === '' ? '' : html`<p role="alert">${this.message}</p>`}

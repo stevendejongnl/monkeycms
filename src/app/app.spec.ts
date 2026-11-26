@@ -355,6 +355,23 @@ test.describe('navigation', () => {
 })
 
 test.describe('sidebar', () => {
+    test('should show the logo, and the monkey alone when it is folded', async ({ page }) => {
+        await serve(page, threePosts())
+        await open(page, '#/posts')
+
+        const logo = app(page).locator('monkey-sidebar monkey-logo')
+        const width = () => logo.evaluate((element) => element.getBoundingClientRect().width)
+
+        await expect(logo.getByRole('img', { name: 'MonkeyCMS' })).toBeVisible()
+
+        const full = await width()
+
+        await app(page).getByRole('button', { name: 'Collapse' }).click()
+
+        await expect(app(page).getByRole('button', { name: 'Expand' })).toBeVisible()
+        expect(await width()).toBeLessThan(full / 3)
+    })
+
     test('should show the count of a collection once its list is loaded', async ({ page }) => {
         await serve(page, threePosts())
         await open(page, '#/posts')
