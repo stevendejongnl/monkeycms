@@ -246,8 +246,11 @@ test.describe('monkey-richtext-field', () => {
     test('should have a toolbar with the formats', async ({ page }) => {
         await draw(page, '')
 
-        await expect(page.getByRole('toolbar', { name: 'Formatting' }).getByRole('button'))
-            .toHaveText(['Heading', 'Subheading', 'Paragraph', 'Bold', 'Italic', 'Bullet list', 'Numbered list', 'Quote'])
+        const buttons = page.getByRole('toolbar', { name: 'Formatting' }).getByRole('button')
+
+        await expect(buttons).toHaveCount(6)
+        expect(await buttons.evaluateAll((all) => all.map((button) => button.getAttribute('aria-label'))))
+            .toEqual(['Heading', 'Bold', 'Italic', 'Bulleted list', 'Quote', 'Paragraph'])
     })
 
     test('should make the selected text bold, and send the HTML', async ({ page }) => {
@@ -264,7 +267,7 @@ test.describe('monkey-richtext-field', () => {
         await editor(page).getByText('One').click()
         await page.getByRole('button', { name: 'Heading', exact: true }).click()
         await editor(page).getByText('Two').click()
-        await page.getByRole('button', { name: 'Bullet list' }).click()
+        await page.getByRole('button', { name: 'Bulleted list' }).click()
         await editor(page).getByText('Three').click()
         await page.getByRole('button', { name: 'Quote' }).click()
 

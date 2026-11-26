@@ -148,7 +148,7 @@ const screens = {
     await page.getByRole('button', { name: 'Bold' }).click()
     await page.keyboard.type(' and wild garlic arrive in April.')
     await page.keyboard.press('Enter')
-    await page.getByRole('button', { name: 'Bullet list' }).click()
+    await page.getByRole('button', { name: 'Bulleted list' }).click()
     await page.keyboard.type('Soup of the day')
     await page.keyboard.press('Enter')
     await page.keyboard.type('Rhubarb tart')
