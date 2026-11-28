@@ -20,6 +20,7 @@ const config = (auth: object = { type: 'none' }) => ({
             label: 'Posts',
             fields: { title: { type: 'text', label: 'Title' }, status: { type: 'select', options: ['draft', 'published'] } },
             status: { field: 'status', param: 'status', publish: 'published' },
+            preview: { fields: ['title', 'status'] },
             list: { path: '/posts', itemsPath: 'data', totalPath: 'total', searchParam: 'q' },
             create: { path: '/posts', itemPath: 'data' },
             update: { path: '/posts/{id}', itemPath: 'data' },
@@ -277,5 +278,37 @@ test.describe('editor', () => {
         const found = await measure(page.getByRole('button', { name: 'Save', exact: true }))
 
         expect(found).toMatchObject({ height: wanted.height, borderRadius: wanted.borderRadius, fontWeight: wanted.fontWeight })
+    })
+})
+
+test.describe('cards and preview', () => {
+    test('a card', async ({ page }) => {
+        await design(page, 'list-cards')
+        const wanted = await measure(page.locator('ul > li').first())
+        await app(page, '#/posts')
+        await page.getByRole('button', { name: 'Card view' }).click()
+        const found = await measure(page.getByRole('list', { name: /Posts/ }).getByRole('listitem').first())
+
+        expect(found.borderRadius).toBe(wanted.borderRadius)
+    })
+
+    test('the title of the preview', async ({ page }) => {
+        await design(page, 'list-preview')
+        const wanted = await measure(page.getByRole('dialog').getByRole('heading', { level: 2 }))
+        await app(page, '#/posts')
+        await page.getByRole('button', { name: 'Preview Opening hours' }).click()
+        const found = await measure(page.getByRole('dialog').getByRole('heading', { level: 2 }))
+
+        expect(found).toMatchObject({ fontSize: wanted.fontSize, fontWeight: wanted.fontWeight })
+    })
+
+    test('the width of the preview', async ({ page }) => {
+        await design(page, 'list-preview')
+        const wanted = await measure(page.getByRole('dialog'))
+        await app(page, '#/posts')
+        await page.getByRole('button', { name: 'Preview Opening hours' }).click()
+        const found = await measure(page.getByRole('dialog'))
+
+        expect(found.width).toBe(wanted.width)
     })
 })
