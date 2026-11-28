@@ -268,8 +268,8 @@ export class MonkeyCollectionList extends LitElement {
 
         .cards {
             display: grid;
-            grid-template-columns: repeat(auto-fill, minmax(16rem, 1fr));
-            gap: var(--monkey-gap);
+            grid-template-columns: repeat(auto-fill, minmax(17.5rem, 1fr));
+            gap: 1.25rem;
             margin: 0;
             padding: 0;
             list-style: none;
@@ -277,12 +277,33 @@ export class MonkeyCollectionList extends LitElement {
 
         .card {
             display: grid;
-            gap: 0.75rem;
-            align-content: start;
-            padding: var(--monkey-padding);
+            grid-template-rows: auto 1fr auto;
+            overflow: hidden;
             background: var(--monkey-surface-color);
             border: 1px solid var(--monkey-border-color);
             border-radius: calc(var(--monkey-radius) + 0.5rem);
+        }
+
+        .card-top {
+            display: grid;
+            align-items: start;
+            min-block-size: 3.5rem;
+            padding: 0.875rem;
+            background: color-mix(in oklab, var(--monkey-accent-color) 10%, var(--monkey-surface-color));
+        }
+
+        .card-body {
+            display: grid;
+            align-content: start;
+            gap: 0.5rem;
+            padding: 1rem 1.125rem 0.5rem;
+        }
+
+        .card h2 {
+            margin: 0;
+            font-size: 1.125rem;
+            line-height: 1.3;
+            letter-spacing: -0.01em;
         }
 
         .card dl {
@@ -290,6 +311,7 @@ export class MonkeyCollectionList extends LitElement {
             grid-template-columns: auto 1fr;
             gap: 0.25rem 0.75rem;
             margin: 0;
+            font-size: 0.875rem;
         }
 
         .card dt {
@@ -298,6 +320,12 @@ export class MonkeyCollectionList extends LitElement {
 
         .card dd {
             margin: 0;
+        }
+
+        .card .actions {
+            justify-content: start;
+            padding: 0.5rem 0.5rem 0.5rem 0.75rem;
+            border-block-start: 1px solid var(--monkey-border-color);
         }
 
         .pager {
@@ -329,46 +357,103 @@ export class MonkeyCollectionList extends LitElement {
 
         dialog {
             box-sizing: border-box;
-            inline-size: min(50vw, 100%);
-            min-inline-size: min(28rem, 100%);
-            max-inline-size: 100%;
+            display: none;
+            inline-size: min(47.5rem, 92vw);
+            max-inline-size: 92vw;
             block-size: 100%;
             max-block-size: 100%;
             margin: 0;
             margin-inline-start: auto;
-            padding: calc(var(--monkey-padding) * 1.5);
-            overflow-y: auto;
+            padding: 0;
             color: var(--monkey-color);
             background: var(--monkey-surface-color);
             border: 0;
             border-inline-start: 1px solid var(--monkey-border-color);
+            box-shadow: -24px 0 48px color-mix(in oklab, var(--monkey-color) 18%, transparent);
+        }
+
+        dialog[open] {
+            display: grid;
+            grid-template-rows: auto 1fr auto;
         }
 
         dialog::backdrop {
             background: color-mix(in oklab, black 45%, transparent);
         }
 
-        dialog h3 {
+        .drawer-top {
+            display: grid;
+            grid-template-columns: 1fr auto;
+            gap: 0.75rem;
+            align-items: center;
+            min-block-size: 4.5rem;
+            padding: 0 1.25rem 0 1.75rem;
+            border-block-end: 1px solid var(--monkey-border-color);
+        }
+
+        .eyebrow {
+            font-size: 0.8125rem;
+            font-weight: 600;
+            letter-spacing: 0.06em;
+            text-transform: uppercase;
+            color: var(--monkey-muted-color);
+        }
+
+        .drawer-top button {
+            display: grid;
+            place-items: center;
+            inline-size: 2.75rem;
+            block-size: 2.75rem;
+            padding: 0;
+            color: inherit;
+            background: none;
+            border: 1px solid var(--monkey-border-color);
+            border-radius: 999px;
+        }
+
+        .drawer-body {
+            display: grid;
+            align-content: start;
+            gap: 1.75rem;
+            padding: 1.75rem;
+            overflow-y: auto;
+        }
+
+        dialog h2 {
             margin: 0;
-            font-size: 1.5rem;
+            font-size: 1.625rem;
+            line-height: 1.2;
+            letter-spacing: -0.02em;
         }
 
         dialog dl {
             display: grid;
-            gap: 1rem;
-            margin: var(--monkey-gap) 0;
+            grid-template-columns: auto 1fr;
+            gap: 0.625rem 1.25rem;
+            margin: 0;
         }
 
         dialog dt {
             color: var(--monkey-muted-color);
-            font-size: 0.8125rem;
-            letter-spacing: 0.06em;
-            text-transform: uppercase;
         }
 
         dialog dd {
-            margin: 0.25rem 0 0;
+            margin: 0;
             white-space: pre-wrap;
+        }
+
+        dialog .actions {
+            justify-content: start;
+            gap: 0.75rem;
+            padding: 1rem 1.75rem;
+            border-block-start: 1px solid var(--monkey-border-color);
+        }
+
+        dialog .actions :is(button, a.button) {
+            min-block-size: 3rem;
+            padding: 0 1.5rem;
+            font-weight: 600;
+            border-radius: 999px;
         }
 
         .visually-hidden {
@@ -648,10 +733,13 @@ export class MonkeyCollectionList extends LitElement {
         return html`
             <ul class="cards" aria-label=${collection.label ?? this.collection}>
                 ${page.items.map((entry) => html`<li class="card">
-                    ${selectable ? this.checkbox(entry) : nothing}
-                    <dl>
-                        ${columns.map(([name, field]) => html`<dt>${field.label ?? name}</dt><dd>${this.cell(name, entry.values[name], collection)}</dd>`)}
-                    </dl>
+                    <div class="card-top">${selectable ? this.checkbox(entry) : nothing}</div>
+                    <div class="card-body">
+                        <h2>${this.labelOf(entry)}</h2>
+                        <dl>
+                            ${columns.filter(([name]) => entry.values[name] !== this.labelOf(entry)).map(([name, field]) => html`<dt>${field.label ?? name}</dt><dd>${this.cell(name, entry.values[name], collection)}</dd>`)}
+                        </dl>
+                    </div>
                     ${this.actions(entry.id, this.labelOf(entry), collection)}
                 </li>`)}
             </ul>`
@@ -670,15 +758,20 @@ export class MonkeyCollectionList extends LitElement {
             <dialog aria-label=${`Preview ${this.labelOf(entry)}`}
                 @close=${() => { this.previewing = undefined }}
                 @click=${(event: Event) => { event.target === event.currentTarget && (event.currentTarget as HTMLDialogElement).close() }}>
-                <h3>${this.labelOf(entry)}</h3>
-                <dl>
-                    ${(collection.preview?.fields ?? []).map((name) => html`
-                        <dt>${collection.fields[name]?.label ?? name}</dt>
-                        <dd>${this.cell(name, entry.values[name], collection)}</dd>`)}
-                </dl>
+                <div class="drawer-top">
+                    <span class="eyebrow">Preview</span>
+                    <button type="button" aria-label="Close the preview" @click=${(event: Event) => (event.currentTarget as HTMLElement).closest('dialog')?.close()}><svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" aria-hidden="true"><path d="M6 6l12 12M18 6L6 18"></path></svg></button>
+                </div>
+                <div class="drawer-body">
+                    <h2>${this.labelOf(entry)}</h2>
+                    <dl>
+                        ${(collection.preview?.fields ?? []).map((name) => html`
+                            <dt>${collection.fields[name]?.label ?? name}</dt>
+                            <dd>${this.cell(name, entry.values[name], collection)}</dd>`)}
+                    </dl>
+                </div>
                 <div class="actions">
                     ${collection.get !== undefined || collection.update !== undefined ? html`<a class="button primary" href=${route}>Edit</a>` : nothing}
-                    <button type="button" @click=${(event: Event) => (event.target as HTMLElement).closest('dialog')?.close()}>Close</button>
                 </div>
             </dialog>`
     }
