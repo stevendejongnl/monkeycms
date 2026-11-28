@@ -533,7 +533,7 @@ test.describe('entry editor', () => {
         await serve(page, threePosts())
         await open(page, '#/posts/new')
 
-        await expect(app(page).getByRole('heading', { level: 3 })).toHaveText(['Content', 'Publishing'])
+        await expect(app(page).getByRole('heading', { level: 2 })).toHaveText(['Content', 'Publishing'])
         await expect(app(page).getByRole('navigation', { name: 'Sections' }).getByRole('button')).toHaveText(['Content', 'Publishing'])
 
         await app(page).getByRole('navigation', { name: 'Sections' }).getByRole('button', { name: 'Publishing' }).click()

@@ -11,6 +11,7 @@ import { sectionsOf } from '../sections.ts'
 import type { EditorSection } from '../sections.ts'
 import { emptyEntry, hasChanged, validateEntry } from '../validate.ts'
 import { hrefOf } from '../route.ts'
+import { icon } from '../icons.ts'
 
 
 export const SAVED = 'monkey-saved'
@@ -31,23 +32,49 @@ export class MonkeyEntryEditor extends LitElement {
         :host {
             display: grid;
             gap: var(--monkey-gap);
-            max-inline-size: 48rem;
+            max-inline-size: 68.75rem;
         }
 
-        h2 {
-            margin: 0;
-            font-size: 2rem;
+        h1 {
+            margin: 0.25rem 0 0;
+            font-size: 2.125rem;
             line-height: 1.15;
             letter-spacing: -0.02em;
         }
 
+        .eyebrow {
+            font-size: 0.8125rem;
+            font-weight: 600;
+            letter-spacing: 0.06em;
+            text-transform: uppercase;
+            color: var(--monkey-muted-color);
+        }
+
+        .back {
+            display: inline-grid;
+            grid-auto-flow: column;
+            gap: 0.375rem;
+            align-items: center;
+            justify-self: start;
+            min-block-size: 2.75rem;
+            font-weight: 600;
+            color: inherit;
+            text-decoration: none;
+        }
+
+        .layout {
+            display: flex;
+            flex-wrap: wrap;
+            gap: 2rem;
+            align-items: flex-start;
+        }
+
         form {
             display: grid;
+            flex: 999 1 30rem;
+            min-inline-size: 0;
             gap: var(--monkey-gap);
-            padding: clamp(1.25rem, 3vw, 2rem);
-            background: var(--monkey-surface-color);
-            border: 1px solid var(--monkey-border-color);
-            border-radius: calc(var(--monkey-radius) + 0.5rem);
+            align-content: start;
         }
 
         header {
@@ -57,19 +84,59 @@ export class MonkeyEntryEditor extends LitElement {
             align-items: center;
         }
 
-        .modes, .outline ul {
+        header > div:first-child {
+            display: grid;
+            line-height: 1.2;
+        }
+
+        .modes {
             display: grid;
             grid-auto-flow: column;
-            justify-content: start;
+            gap: 0.25rem;
+            padding: 0.25rem;
+            background: var(--monkey-surface-color);
+            border: 1px solid var(--monkey-border-color);
+            border-radius: 999px;
+        }
+
+        .modes button {
+            display: inline-grid;
+            grid-auto-flow: column;
             gap: 0.5rem;
+            align-items: center;
+            min-block-size: 2.5rem;
+            padding: 0 1.125rem;
+            font-weight: 600;
+            background: none;
+            border: 0;
+            border-radius: 999px;
+        }
+
+        .outline {
+            flex: 0 1 12.5rem;
+            position: sticky;
+            inset-block-start: 1.5rem;
+        }
+
+        .outline ul {
+            display: grid;
+            gap: 0.25rem;
             margin: 0;
             padding: 0;
             list-style: none;
         }
 
-        .modes button, .outline button {
+        .outline button {
+            display: grid;
+            justify-items: start;
+            inline-size: 100%;
             min-block-size: 2.75rem;
-            padding: 0 1rem;
+            padding: 0 0.875rem;
+            font-weight: 400;
+            text-align: start;
+            color: var(--monkey-muted-color);
+            background: none;
+            border: 0;
         }
 
         button[aria-pressed='true'] {
@@ -80,33 +147,44 @@ export class MonkeyEntryEditor extends LitElement {
 
         section {
             display: grid;
-            gap: var(--monkey-gap);
+            gap: 1.25rem;
+            padding: clamp(1.25rem, 3vw, 1.75rem);
+            background: var(--monkey-surface-color);
+            border: 1px solid var(--monkey-border-color);
+            border-radius: calc(var(--monkey-radius) + 0.5rem);
         }
 
-        section h3 {
+        section h2 {
             margin: 0;
             font-size: 1.25rem;
+            letter-spacing: -0.01em;
             scroll-margin-block-start: 1rem;
         }
 
-        section h3:focus {
+        section h2:focus {
             outline: none;
         }
 
         .problems {
             display: grid;
-            gap: 0.5rem;
+            gap: 0.375rem;
+            padding: 0.875rem 1.125rem;
+            border: 1px solid var(--monkey-error-color);
+            border-radius: var(--monkey-radius);
+            background: color-mix(in oklab, var(--monkey-error-color) 10%, var(--monkey-surface-color));
         }
 
         .problems p {
             margin: 0;
+            font-weight: 700;
         }
 
         .problems ul {
             display: grid;
             gap: 0.25rem;
             margin: 0;
-            padding-inline-start: 1.25rem;
+            padding: 0;
+            list-style: none;
         }
 
         .link {
@@ -148,10 +226,28 @@ export class MonkeyEntryEditor extends LitElement {
             grid-template-columns: 1fr auto auto;
             gap: 0.75rem;
             align-items: center;
+            box-sizing: border-box;
+            min-block-size: 4.5rem;
             padding: 0.75rem 1rem;
             background: var(--monkey-surface-color);
             border: 1px solid var(--monkey-border-color);
             border-radius: var(--monkey-radius);
+            box-shadow: 0 -8px 24px color-mix(in oklab, var(--monkey-color) 8%, transparent);
+        }
+
+        .bar [role='status'] {
+            display: inline-grid;
+            grid-auto-flow: column;
+            gap: 0.5rem;
+            align-items: center;
+            justify-self: start;
+        }
+
+        .bar .dot {
+            inline-size: 0.625rem;
+            block-size: 0.625rem;
+            border-radius: 50%;
+            background: var(--monkey-accent-color);
         }
 
         .bar [role='status'] {
@@ -161,6 +257,10 @@ export class MonkeyEntryEditor extends LitElement {
         .bar [role='status'].changed {
             color: var(--monkey-color);
             font-weight: 600;
+        }
+
+        .bar [role='status']:not(.changed) .dot {
+            display: none;
         }
 
         [role='status'] {
@@ -236,7 +336,7 @@ export class MonkeyEntryEditor extends LitElement {
     private async jumpTo(title: string): Promise<void> {
         await this.updateComplete
 
-        const heading = [...this.renderRoot.querySelectorAll<HTMLElement>('section h3')].find((candidate) => candidate.textContent === title)
+        const heading = [...this.renderRoot.querySelectorAll<HTMLElement>('section h2')].find((candidate) => candidate.textContent === title)
 
         heading?.focus()
         heading?.scrollIntoView({ block: 'start' })
@@ -342,7 +442,7 @@ export class MonkeyEntryEditor extends LitElement {
     private section({ title, fields }: EditorSection): unknown {
         return html`
             <section aria-label=${title === '' ? 'Fields' : title}>
-                ${title === '' ? nothing : html`<h3 tabindex="-1">${title}</h3>`}
+                ${title === '' ? nothing : html`<h2 tabindex="-1">${title}</h2>`}
                 ${this.mode === 'edit' ? fields.map((entry) => this.field([...entry])) : fields.map(([name, field]) => this.block(name, field))}
             </section>`
     }
@@ -394,22 +494,30 @@ export class MonkeyEntryEditor extends LitElement {
 
         const sections = sectionsOf(collection)
 
+        const label = collection.label ?? this.collection
+
         return html`
+            <a class="back" href=${hrefOf({ view: 'list', collection: this.collection })}>${icon('collapse', 18)}${label}</a>
             <header>
-                <h2>${this.entryId === '' ? 'New' : 'Edit'} ${collection.label ?? this.collection}</h2>
+                <div>
+                    <span class="eyebrow">${this.entryId === '' ? 'New entry' : `Entry ${this.entryId}`}</span>
+                    <h1>${this.entryId === '' ? 'New' : 'Edit'} ${label}</h1>
+                </div>
                 <div class="modes" role="group" aria-label="Mode">
-                    ${(['edit', 'preview'] as const).map((mode) => html`<button type="button" aria-pressed=${String(this.mode === mode)} @click=${() => { this.mode = mode }}>${mode === 'edit' ? 'Edit' : 'Preview'}</button>`)}
+                    ${(['edit', 'preview'] as const).map((mode) => html`<button type="button" aria-pressed=${String(this.mode === mode)} @click=${() => { this.mode = mode }}>${icon(mode === 'edit' ? 'document' : 'window', 18)}${mode === 'edit' ? 'Edit' : 'Preview'}</button>`)}
                 </div>
             </header>
-            ${this.outline(sections)}
-            <form novalidate @submit=${(event: SubmitEvent) => this.save(event)}>
-                ${this.problems(collection)}
-                ${sections.map((section) => this.section(section))}
-                <div class="bar">
-                    <span role="status" class=${this.dirty ? 'changed' : ''}>${this.dirty ? 'Unsaved changes' : 'No changes'}</span>
-                    <a class="button" href=${hrefOf({ view: 'list', collection: this.collection })}>Cancel</a>
-                    <button type="submit" ?disabled=${this.saving}>${this.saving ? 'Saving…' : 'Save'}</button>
-                </div>
-            </form>`
+            ${this.problems(collection)}
+            <div class="layout">
+                ${this.outline(sections)}
+                <form novalidate @submit=${(event: SubmitEvent) => this.save(event)}>
+                    ${sections.map((section) => this.section(section))}
+                    <div class="bar">
+                        <span role="status" class=${this.dirty ? 'changed' : ''}><span class="dot" aria-hidden="true"></span>${this.dirty ? 'Unsaved changes' : 'No changes'}</span>
+                        <a class="button" href=${hrefOf({ view: 'list', collection: this.collection })}>Cancel</a>
+                        <button type="submit" ?disabled=${this.saving}>${this.saving ? 'Saving…' : 'Save'}</button>
+                    </div>
+                </form>
+            </div>`
     }
 }
