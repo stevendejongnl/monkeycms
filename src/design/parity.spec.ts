@@ -250,3 +250,32 @@ test.describe('sign in', () => {
         expect(found).toMatchObject({ width: wanted.width, height: wanted.height, borderRadius: wanted.borderRadius })
     })
 })
+
+test.describe('editor', () => {
+    test('the title of the page', async ({ page }) => {
+        await design(page, 'editor')
+        const wanted = await measure(page.getByRole('heading', { level: 1 }))
+        await app(page, '#/posts/new')
+        const found = await measure(page.getByRole('heading', { level: 1 }))
+
+        expect(found).toMatchObject({ fontSize: wanted.fontSize, fontWeight: wanted.fontWeight, height: wanted.height })
+    })
+
+    test('the mode switch', async ({ page }) => {
+        await design(page, 'editor')
+        const wanted = await measure(page.getByRole('button', { name: 'Edit', exact: true }))
+        await app(page, '#/posts/new')
+        const found = await measure(page.getByRole('button', { name: 'Edit', exact: true }))
+
+        expect(found).toMatchObject({ height: wanted.height, borderRadius: wanted.borderRadius, fontWeight: wanted.fontWeight })
+    })
+
+    test('the save button', async ({ page }) => {
+        await design(page, 'editor')
+        const wanted = await measure(page.getByRole('button', { name: 'Save', exact: true }))
+        await app(page, '#/posts/new')
+        const found = await measure(page.getByRole('button', { name: 'Save', exact: true }))
+
+        expect(found).toMatchObject({ height: wanted.height, borderRadius: wanted.borderRadius, fontWeight: wanted.fontWeight })
+    })
+})
